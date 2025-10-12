@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+{% block title %}Listado de Requizas{% endblock %}
+{% block content %}
+<h2>Listado de Requizas</h2>
+
+<div class="mb-3 d-flex gap-2">
+    <a href="{% url 'nueva_requiza' %}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Nueva Requiza
+    </a>
+    <a href="{% url 'requiza_list' %}" class="btn btn-primary">
+        <i class="fas fa-list"></i> Ver Listado
+    </a>
+</div>
+
+<table border="1">
+    <tr>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Motivo</th>
+        <th>Fecha</th>
+        <th>Usuario</th>
+    </tr>
+    {% for r in requizas %}
+    <tr>
+        <td>{{ r.producto.nombre }}</td>
+        <td>{{ r.cantidad }}</td>
+        <td>{{ r.motivo }}</td>
+        <td>{{ r.fecha }}</td>
+        <td>{{ r.usuario }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

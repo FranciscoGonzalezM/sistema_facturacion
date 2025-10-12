@@ -1,0 +1,158 @@
+{% extends 'core/base.html' %}
+{% block title %}Factura Generada{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-success">✅ Factura Generada Correctamente</h2>
+        <a href="{% url 'facturas:facturar' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nueva Venta
+        </a>
+    </div>
+
+    <a href="javascript:history.back()" class="btn btn-secondary mb-3">
+        <i class="fas fa-arrow-left me-2"></i>Volver
+    </a>
+
+    <!-- Tarjeta de resumen de factura -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Resumen de Factura #{{ factura.id }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>ID Factura:</strong> {{ factura.id }}</p>
+                    <p><strong>Cliente:</strong> {{ factura.cliente.nombre|default:"Consumidor Final" }}</p>
+                    <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Vendedor:</strong> {{ factura.usuario.get_full_name|default:factura.usuario.username }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Tipo de Venta:</strong> 
+                        <span class="badge {% if factura.tipo_venta == 'contado' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ factura.get_tipo_venta_display }}
+                        </span>
+                    </p>
+                    <p><strong>Método de Pago:</strong> 
+                        <span class="badge bg-info">{{ factura.get_metodo_pago_display }}</span>
+                    </p>
+                    <p><strong>Estado Pago:</strong> 
+                        <span class="badge {% if factura.estado_pago == 'completado' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ factura.get_estado_pago_display }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Detalles de productos -->
+            <h5>Productos Facturados</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unit.</th>
+                            <th>Moneda</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in detalles %}
+                        <tr>
+                            <td>{{ detalle.producto.nombre }}</td>
+                            <td class="text-center">{{ detalle.cantidad }}</td>
+                            <td class="text-end">
+                                {% if detalle.producto.moneda.simbolo %}
+                                    {{ detalle.producto.moneda.simbolo }}{{ detalle.precio_unitario|floatformat:2 }}
+                                {% else %}
+                                    ${{ detalle.precio_unitario|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {% if detalle.producto.moneda.principal %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ detalle.producto.moneda.codigo }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                {% if detalle.producto.moneda.simbolo %}
+                                    {{ detalle.producto.moneda.simbolo }}{{ detalle.subtotal|floatformat:2 }}
+                                {% else %}
+                                    ${{ detalle.subtotal|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totales -->
+            <div class="row justify-content-end mt-4">
+                <div class="col-md-4">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td><strong>Subtotal:</strong></td>
+                            <td class="text-end">${{ factura.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>IVA:</strong></td>
+                            <td class="text-end">${{ factura.iva_total|floatformat:2 }}</td>
+                        </tr>
+                        <tr class="table-active">
+                            <td><strong>Total:</strong></td>
+                            <td class="text-end fw-bold text-primary">${{ factura.total|floatformat:2 }}</td>
+                        </tr>
+                        {% if factura.metodo_pago == 'efectivo' and factura.monto_recibido %}
+                        <tr>
+                            <td><strong>Recibido:</strong></td>
+                            <td class="text-end">${{ factura.monto_recibido|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vuelto:</strong></td>
+                            <td class="text-end">${{ factura.vuelto|floatformat:2 }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="d-flex gap-2 mt-4">
+        <a href="{% url 'facturas:factura_pdf' factura.id %}" class="btn btn-success" target="_blank">
+            <i class="fas fa-file-pdf me-2"></i>Descargar PDF
+        </a>
+        <a href="{% url 'facturas:facturar' %}" class="btn btn-primary">
+            <i class="fas fa-receipt me-2"></i>Nueva Factura
+        </a>
+        <a href="{% url 'facturas:factura_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-list me-2"></i>Ver Todas las Facturas
+        </a>
+    </div>
+
+    <!-- Mensaje de confirmación -->
+    <div class="alert alert-success mt-4" role="alert">
+        <h5 class="alert-heading">¡Factura procesada exitosamente!</h5>
+        <p class="mb-0">La factura #{{ factura.id }} ha sido registrada en el sistema. Stock actualizado correctamente.</p>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
+{% endblock %}

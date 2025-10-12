@@ -1,0 +1,25 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Panel de Administración{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Bienvenido, administrador {{ user.username }}</h2>
+    <p>Este es el panel de administración personalizado de tu sistema.</p>
+
+    <!-- 🔧 Botones de mantenimiento -->
+    <div class="row mt-4">
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'cliente_list' %}" class="btn btn-primary w-100">Clientes</a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'producto_list' %}" class="btn btn-success w-100">Productos</a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'categoria_list' %}" class="btn btn-warning w-100">Categorías</a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="{% url 'factura_list' %}" class="btn btn-danger w-100">Facturas</a>
+        </div>
+    </div>
+{% endblock %}

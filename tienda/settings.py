@@ -200,6 +200,13 @@ CSRF_TRUSTED_ORIGINS = [
 if render_host:
     CSRF_TRUSTED_ORIGINS.append(f"https://{_normalize_host(render_host)}")
 
+# When running behind a proxy (Render, Cloudflare, etc.) ensure Django
+# understands the original request scheme/host. This prevents invalid
+# request/host detection (400) when the proxy forwards HTTPS requests.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Allow using forwarded Host header
+USE_X_FORWARDED_HOST = True
+
 # Stripe Configuration
 STRIPE_PUBLIC_KEY = 'pk_test_tu_llave_publica'  # Reemplaza con tu llave
 STRIPE_SECRET_KEY = 'sk_test_tu_llave_secreta'  # Reemplaza con tu llave

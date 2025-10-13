@@ -26,7 +26,24 @@ SECRET_KEY = 'django-insecure-$+$x_!t)9m(9anu8)^2hamaw*83-$#$y+w7viwb!)$)mqr$qvc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['https://sistema-facturacion-v5b1.onrender.com', 'localhost', '127.0.0.1']
+def _normalize_host(h: str) -> str:
+    """Strip scheme and trailing slashes from a host value coming from env vars or Render."""
+    if not h:
+        return h
+    # remove scheme if present
+    if h.startswith('http://') or h.startswith('https://'):
+        h = h.split('://', 1)[1]
+    return h.rstrip('/')
+
+# Allow configuring hosts via environment. Render provides RENDER_EXTERNAL_HOSTNAME env var.
+render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME') or os.environ.get('RENDER_SERVE_HOST')
+env_allowed = os.environ.get('ALLOWED_HOSTS', '')
+env_hosts = [h for h in (h.strip() for h in env_allowed.split(',')) if h]
+ALLOWED_HOSTS = [
+    _normalize_host(h) for h in (
+        env_hosts + ['localhost', '127.0.0.1'] + ([render_host] if render_host else [])
+    )
+]
 
 
 # Application definition
@@ -179,6 +196,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost'
 ]
+# If Render provides an external hostname, add it as a trusted origin with https
+if render_host:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_normalize_host(render_host)}")
 
 # Stripe Configuration
 STRIPE_PUBLIC_KEY = 'pk_test_tu_llave_publica'  # Reemplaza con tu llave

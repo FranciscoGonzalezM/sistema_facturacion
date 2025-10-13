@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-$+$x_!t)9m(9anu8)^2hamaw*83-$#$y+w7viwb!)$)mqr$qvc'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['https://sistema-facturacion-v5b1.onrender.com', 'localhost', '127.0.0.1']
 

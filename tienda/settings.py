@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-$+$x_!t)9m(9anu8)^2hamaw*83-$#$y+w7viwb!)$)mqr$qvc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://sistema-facturacion-v5b1.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'tienda.urls'

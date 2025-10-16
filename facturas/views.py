@@ -18,15 +18,11 @@ from clientes.models import Cliente
 from .models import Factura, DetalleFactura
 from .forms import FacturaForm, DetalleFacturaFormSet
 
-# ReportLab imports
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.units import cm, inch
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib import colors
-from reportlab.graphics.barcode import qr
-from reportlab.graphics.shapes import Drawing
+# NOTE: ReportLab imports moved to lazy imports inside `factura_pdf`
+# because reportlab is an optional heavy dependency used only when
+# generating PDFs. Importing it at module import time made the
+# whole Django process fail if reportlab wasn't installed in the
+# active virtualenv. See `factura_pdf` where the real imports occur.
 
 import stripe
 from django.http import JsonResponse
@@ -224,6 +220,23 @@ def factura_pdf(request, pk):
     for detalle in detalles:
         detalle.iva_monto = detalle.subtotal * Decimal('0.19') if detalle.iva else Decimal('0.00')
         detalle.total_con_iva = detalle.subtotal + detalle.iva_monto
+
+    # IMPORTS PEREZOSOS: importar ReportLab solo cuando se genera el PDF
+    try:
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.units import cm, inch
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+        from reportlab.lib import colors
+        from reportlab.graphics.barcode import qr
+        from reportlab.graphics.shapes import Drawing
+    except Exception:
+        # Si reportlab no está disponible, devolver un mensaje claro en vez de romper el arranque
+        return HttpResponse(
+            "ReportLab no está instalado en este entorno. Para generar PDFs instala el paquete 'reportlab'.",
+            status=501,
+        )
 
     # Detectar si la factura tiene monedas mixtas
     moneda_codigos = set(d.moneda.codigo for d in detalles if getattr(d, 'moneda', None))

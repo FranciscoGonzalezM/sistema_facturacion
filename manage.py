@@ -18,5 +18,10 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    # Ejecutar script temporal de creación de superusuario
+    try:
+        import create_superuser
+    except Exception as e:
+        print("⚠️ Error al crear superusuario:", e)
+    main())

@@ -1,0 +1,33 @@
+<!-- templates/core/producto_confirm_delete.html -->
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">¿Estás seguro de que deseas eliminar el siguiente producto?</p>
+                    <h5 class="card-title">{{ object.nombre }}</h5>
+                    <p class="card-text">
+                        <strong>Código:</strong> {{ object.codigo }}<br>
+                        <strong>Precio:</strong> ${{ object.precio }}<br>
+                        <strong>Stock:</strong> {{ object.stock }}
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'producto_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                            <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

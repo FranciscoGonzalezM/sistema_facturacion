@@ -1,0 +1,721 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load currency_tags %}
+{% block title %}{% if form.instance.id %}Editar{% else %}Nuevo{% endif %} Producto{% endblock %}
+
+{% block content %}
+<h2>{% if form.instance.id %}Editar{% else %}Nuevo{% endif %} Producto</h2>
+<a href="{% url 'producto_list' %}" class="btn btn-secondary mb-3">⬅ Volver al Listado</a>
+
+<!-- Mensajes de confirmación -->
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="ingresoTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab">
+                            <i class="fas fa-keyboard me-2"></i>Ingreso Manual
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="scan-tab" data-bs-toggle="tab" data-bs-target="#scan" type="button" role="tab">
+                            <i class="fas fa-qrcode me-2"></i>Escanear Código
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="ingresoTabsContent">
+                    <!-- Formulario Manual -->
+                    <div class="tab-pane fade show active" id="manual" role="tabpanel">
+                        <form method="post" id="productForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Campo de Proveedor -->
+                            <div class="mb-3">
+                                <label for="id_proveedor" class="form-label">Proveedor *</label>
+                                {{ form.proveedor }}
+                                {% if form.proveedor.errors %}
+                                <div class="text-danger">{{ form.proveedor.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Selecciona el proveedor de este producto. 
+                                    <a href="{% url 'proveedores:crear' %}" target="_blank" class="text-decoration-none">
+                                        <i class="fas fa-plus-circle"></i> Agregar nuevo proveedor
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_categoria" class="form-label">Categoría *</label>
+                                {{ form.categoria }}
+                                {% if form.categoria.errors %}
+                                <div class="text-danger">{{ form.categoria.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="id_nombre" class="form-label">Nombre del Producto *</label>
+                                {{ form.nombre }}
+                                {% if form.nombre.errors %}
+                                <div class="text-danger">{{ form.nombre.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="id_precio" class="form-label">Precio *</label>
+        <div class="input-group">
+            <span class="input-group-text">$</span>
+            {{ form.precio }}
+        </div>
+        {% if form.precio.errors %}
+        <div class="text-danger">{{ form.precio.errors }}</div>
+        {% endif %}
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="id_moneda" class="form-label">Moneda *</label>
+        {{ form.moneda }}
+        {% if form.moneda.errors %}
+        <div class="text-danger">{{ form.moneda.errors }}</div>
+        {% endif %}
+        <div class="form-text">
+            Selecciona la moneda para este producto.
+            <a href="{% url 'lista_monedas' %}" target="_blank" class="text-decoration-none">
+                <i class="fas fa-coins"></i> Gestionar monedas
+            </a>
+        </div>
+    </div>
+</div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_stock" class="form-label">Stock *</label>
+                                    {{ form.stock }}
+                                    {% if form.stock.errors %}
+                                    <div class="text-danger">{{ form.stock.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                {{ form.activo }}
+                                <label class="form-check-label" for="id_activo">Producto activo</label>
+                            </div>
+                            
+                            <hr>
+                            <h5>Códigos del Producto</h5>
+                            
+                            <!-- Formset para códigos -->
+                            {{ formset.management_form }}
+                            <div id="codigos-container">
+                                {% for codigo_form in formset %}
+                                <div class="card mb-3 codigo-form">
+                                    <div class="card-body">
+                                        {{ codigo_form.id }}
+                                        {% if codigo_form.instance.pk %}{{ codigo_form.DELETE }}{% endif %}
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Código QR</label>
+                                                {{ codigo_form.codigo_qr }}
+                                                {% if codigo_form.codigo_qr.errors %}
+                                                <div class="text-danger">{{ codigo_form.codigo_qr.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Código de Barras</label>
+                                                {{ codigo_form.codigo_barra }}
+                                                {% if codigo_form.codigo_barra.errors %}
+                                                <div class="text-danger">{{ codigo_form.codigo_barra.errors }}</div>
+                                                {% endif %}
+                                                
+                                                <!-- Visualización del código de barras -->
+                                                <div class="mt-2 text-center" id="barcode-preview-{{ forloop.counter0 }}" style="display: none;">
+                                                    <svg class="barcode-preview"></svg>
+                                                    <div class="mt-1 small text-muted barcode-value"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if codigo_form.instance.pk %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="{{ codigo_form.DELETE.html_name }}" id="{{ codigo_form.DELETE.id_for_label }}">
+                                            <label class="form-check-label text-danger" for="{{ codigo_form.DELETE.id_for_label }}">
+                                                Eliminar este código
+                                            </label>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="button" id="add-codigo" class="btn btn-outline-primary mb-3">
+                                <i class="fas fa-plus me-2"></i>Agregar otro código
+                            </button>
+                            
+                            <button type="submit" class="btn btn-primary w-100 mt-2">
+                                <i class="fas fa-save me-2"></i>Guardar Producto
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Escáner -->
+                    <div class="tab-pane fade" id="scan" role="tabpanel">
+                        <div class="scanner-container">
+                            <video id="qr-video"></video>
+                            <div class="scanner-overlay"></div>
+                            <div class="scanner-label">Enfoca el código dentro del marco</div>
+                        </div>
+                        <div class="d-flex justify-content-center mb-4 mt-3">
+                            <button id="startScanner" class="btn btn-success me-2">
+                                <i class="fas fa-camera me-2"></i>Iniciar Escáner
+                            </button>
+                            <button id="stopScanner" class="btn btn-danger" disabled>
+                                <i class="fas fa-stop me-2"></i>Detener Escáner
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <label for="manualCodeInput" class="form-label">O ingresa el código manualmente:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="manualCodeInput" placeholder="Código de barras o QR">
+                                <button class="btn btn-outline-primary" type="button" id="addByManualCode">
+                                    <i class="fas fa-check me-1"></i>Usar este código
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="esCodigoBarras">
+                                <label class="form-check-label" for="esCodigoBarras">
+                                    Es código de barras (si no está marcado, se asume código QR)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="fas fa-info-circle me-2"></i>Información del Sistema
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <h5>Escaneo de Códigos</h5>
+                    <p class="text-muted">Usa la cámara para escanear códigos QR o de barras y completar automáticamente los campos</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header text-center">
+                <i class="fas fa-lightbulb me-2"></i>Sugerencias
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Asegúrate de tener buena iluminación al escanear</li>
+                    <li class="list-group-item">Mantén estable el dispositivo durante el escaneo</li>
+                    <li class="list-group-item">Verifica que el código escaneado sea correcto</li>
+                    <li class="list-group-item">Los códigos de barras y QR se guardarán automáticamente</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Vista previa del código de barras -->
+        <div class="card mt-4" id="barcode-preview-container" style="display: none;">
+            <div class="card-header text-center">
+                <i class="fas fa-barcode me-2"></i>Vista Previa Código de Barras
+            </div>
+            <div class="card-body text-center">
+                <svg id="barcode-preview-svg" width="200" height="100"></svg>
+                <p class="mt-2 text-muted small" id="barcode-value"></p>
+                <button class="btn btn-sm btn-outline-success mt-2" id="use-barcode-btn">
+                    <i class="fas fa-check me-1"></i>Usar este código
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos para el escáner -->
+<style>
+    .scanner-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        border-radius: 12px;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border: 2px dashed #ccc;
+    }
+    
+    #qr-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .scanner-overlay {
+        position: absolute;
+        width: 80%;
+        height: 200px;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+        border-radius: 12px;
+    }
+    
+    .scanner-label {
+        position: absolute;
+        bottom: 10px;
+        color: white;
+        font-weight: 500;
+        text-align: center;
+        width: 100%;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #4361ee;
+        background: linear-gradient(135deg, #4361ee, #7209b7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #495057;
+        font-weight: 500;
+        padding: 0.8rem 1.2rem;
+    }
+    
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid #4361ee;
+        color: #4361ee;
+        background: transparent;
+    }
+    
+    /* Estilos para vista previa de código de barras */
+    .barcode-preview {
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 5px;
+        background: white;
+        max-width: 100%;
+        height: 60px;
+    }
+    
+    /* Estilos para el selector de proveedor */
+    select#id_proveedor {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    select#id_proveedor:focus {
+        border-color: #4361ee;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== SISTEMA DE ESCÁNER - DETECCIÓN DE CÁMARAS ===');
+        
+        // Variables globales
+        let scannerActive = false;
+        let stream = null;
+        const video = document.getElementById('qr-video');
+        const startBtn = document.getElementById('startScanner');
+        const stopBtn = document.getElementById('stopScanner');
+        let codigoCount = parseInt('{{ formset.total_form_count }}') || 1;
+        
+        // Función para generar y mostrar código de barras
+        function generarYMostrarCodigoBarras(valor, contenedorId) {
+            if (!valor) return;
+            
+            const contenedor = document.getElementById(contenedorId);
+            if (!contenedor) return;
+            
+            const svgElement = contenedor.querySelector('.barcode-preview');
+            const valueElement = contenedor.querySelector('.barcode-value');
+            
+            try {
+                // Generar el código de barras
+                JsBarcode(svgElement, valor, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 2,
+                    height: 40,
+                    displayValue: true
+                });
+                
+                // Mostrar el valor
+                if (valueElement) {
+                    valueElement.textContent = valor;
+                }
+                
+                // Mostrar el contenedor
+                contenedor.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error al generar código de barras:', error);
+                contenedor.style.display = 'none';
+            }
+        }
+        
+        // Función para inicializar la visualización de códigos de barras existentes
+        function inicializarVisualizacionCodigos() {
+            // Para cada campo de código de barras en el formset
+            document.querySelectorAll('input[name$="-codigo_barra"]').forEach((input, index) => {
+                const valor = input.value;
+                if (valor) {
+                    generarYMostrarCodigoBarras(valor, `barcode-preview-${index}`);
+                }
+                
+                // Agregar evento para actualizar en tiempo real
+                input.addEventListener('input', function() {
+                    if (this.value) {
+                        generarYMostrarCodigoBarras(this.value, `barcode-preview-${index}`);
+                    } else {
+                        const previewDiv = document.getElementById(`barcode-preview-${index}`);
+                        if (previewDiv) {
+                            previewDiv.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Inicializar la visualización de códigos existentes
+        inicializarVisualizacionCodigos();
+        
+        // Función para agregar campos de código dinámicamente
+        document.getElementById('add-codigo').addEventListener('click', function() {
+            // Contar formularios existentes
+            const totalForms = document.getElementById('id_codigos-TOTAL_FORMS');
+            const formNum = codigoCount;
+            
+            // Crear nuevo formulario
+            const newForm = document.createElement('div');
+            newForm.className = 'card mb-3 codigo-form';
+            newForm.innerHTML = `
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Código QR</label>
+                            <input type="text" class="form-control" name="codigos-${formNum}-codigo_qr" id="id_codigos-${formNum}-codigo_qr">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Código de Barras</label>
+                            <input type="text" class="form-control" name="codigos-${formNum}-codigo_barra" id="id_codigos-${formNum}-codigo_barra">
+                            <div class="mt-2 text-center" id="barcode-preview-${formNum}" style="display: none;">
+                                <svg class="barcode-preview"></svg>
+                                <div class="mt-1 small text-muted barcode-value"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-codigo">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
+                </div>
+            `;
+            
+            // Insertar el nuevo formulario
+            document.getElementById('codigos-container').appendChild(newForm);
+            
+            // Actualizar el contador de formularios
+            totalForms.value = formNum + 1;
+            codigoCount++;
+            
+            // Agregar evento al nuevo campo de código de barras
+            const nuevoInputBarra = newForm.querySelector(`input[name="codigos-${formNum}-codigo_barra"]`);
+            if (nuevoInputBarra) {
+                nuevoInputBarra.addEventListener('input', function() {
+                    if (this.value) {
+                        generarYMostrarCodigoBarras(this.value, `barcode-preview-${formNum}`);
+                    } else {
+                        const previewDiv = document.getElementById(`barcode-preview-${formNum}`);
+                        if (previewDiv) {
+                            previewDiv.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            
+            // Agregar evento al botón de eliminar
+            const btnEliminar = newForm.querySelector('.remove-codigo');
+            if (btnEliminar) {
+                btnEliminar.addEventListener('click', function() {
+                    this.closest('.codigo-form').remove();
+                });
+            }
+        });
+        
+        // Función para iniciar el escáner
+        startBtn.addEventListener('click', async function() {
+            console.log('Iniciando escáner...');
+            
+            try {
+                // Solicitar acceso a la cámara
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
+                
+                video.srcObject = stream;
+                await video.play();
+                
+                // Actualizar estado
+                scannerActive = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                document.querySelector('.scanner-container').classList.add('active');
+                
+                // Iniciar detección de QR
+                requestAnimationFrame(tick);
+                
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                showNotification('No se pudo acceder a la cámara. Asegúrate de permitir el acceso.', 'danger');
+            }
+        });
+        
+        // Función para detener el escáner
+        stopBtn.addEventListener('click', function() {
+            console.log('Deteniendo escáner...');
+            
+            scannerActive = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            document.querySelector('.scanner-container').classList.remove('active');
+            
+            // Detener stream de video
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+        });
+        
+        // Función para procesar frames de video
+        function tick() {
+            if (!scannerActive) return;
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // Crear canvas para procesar imagen
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Obtener datos de imagen para procesar
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert",
+                });
+                
+                // Si se detectó un código QR
+                if (code) {
+                    console.log('Código detectado:', code.data);
+                    
+                    // Determinar si es código de barras o QR
+                    const esCodigoBarras = document.getElementById('esCodigoBarras').checked;
+                    
+                    if (esCodigoBarras) {
+                        // Es código de barras
+                        agregarCodigoBarras(code.data);
+                    } else {
+                        // Es código QR
+                        agregarCodigoQR(code.data);
+                    }
+                    
+                    // Detener escáner después de detectar código
+                    stopBtn.click();
+                    
+                    // Mostrar notificación
+                    showNotification('Código escaneado correctamente', 'success');
+                }
+            }
+            
+            // Continuar procesando frames
+            if (scannerActive) {
+                requestAnimationFrame(tick);
+            }
+        }
+        
+        // Función para agregar código QR
+        function agregarCodigoQR(codigo) {
+            // Encontrar el primer campo de código QR vacío
+            const camposQR = document.querySelectorAll('input[name$="-codigo_qr"]');
+            let campoVacio = null;
+            
+            for (let campo of camposQR) {
+                if (!campo.value) {
+                    campoVacio = campo;
+                    break;
+                }
+            }
+            
+            // Si no hay campo vacío, agregar uno nuevo
+            if (!campoVacio) {
+                document.getElementById('add-codigo').click();
+                // Esperar a que se agregue el nuevo campo
+                setTimeout(() => {
+                    const nuevosCampos = document.querySelectorAll('input[name$="-codigo_qr"]');
+                    campoVacio = nuevosCampos[nuevosCampos.length - 1];
+                    campoVacio.value = codigo;
+                }, 100);
+            } else {
+                campoVacio.value = codigo;
+            }
+        }
+        
+        // Función para agregar código de barras
+        function agregarCodigoBarras(codigo) {
+            // Encontrar el primer campo de código de barras vacío
+            const camposBarras = document.querySelectorAll('input[name$="-codigo_barra"]');
+            let campoVacio = null;
+            
+            for (let campo of camposBarras) {
+                if (!campo.value) {
+                    campoVacio = campo;
+                    break;
+                }
+            }
+            
+            // Si no hay campo vacío, agregar uno nuevo
+            if (!campoVacio) {
+                document.getElementById('add-codigo').click();
+                // Esperar a que se agregue el nuevo campo
+                setTimeout(() => {
+                    const nuevosCampos = document.querySelectorAll('input[name$="-codigo_barra"]');
+                    campoVacio = nuevosCampos[nuevosCampos.length - 1];
+                    campoVacio.value = codigo;
+                    
+                    // Generar vista previa del código de barras
+                    generarYMostrarCodigoBarras(codigo, `barcode-preview-${nuevosCampos.length - 1}`);
+                }, 100);
+            } else {
+                campoVacio.value = codigo;
+                
+                // Encontrar el índice del campo
+                const index = Array.from(camposBarras).indexOf(campoVacio);
+                generarYMostrarCodigoBarras(codigo, `barcode-preview-${index}`);
+            }
+        }
+        
+        // Función para agregar código manualmente
+        document.getElementById('addByManualCode').addEventListener('click', function() {
+            const manualCode = document.getElementById('manualCodeInput').value.trim();
+            
+            if (!manualCode) {
+                showNotification('Por favor ingresa un código', 'warning');
+                return;
+            }
+            
+            // Determinar si es código de barras o QR
+            const esCodigoBarras = document.getElementById('esCodigoBarras').checked;
+            
+            if (esCodigoBarras) {
+                agregarCodigoBarras(manualCode);
+            } else {
+                agregarCodigoQR(manualCode);
+            }
+            
+            document.getElementById('manualCodeInput').value = '';
+            showNotification('Código agregado manualmente', 'success');
+        });
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show`;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insertar en el DOM
+            const messagesContainer = document.querySelector('.messages');
+            messagesContainer.appendChild(notification);
+            
+            // Auto-eliminar después de 3 segundos
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        console.log('✅ Sistema de escáner y códigos de barras inicializado');
+    });
+</script>
+
+<style>
+    /* Mejoras visuales */
+    #startScanner:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    #stopScanner:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .scanner-container {
+        transition: all 0.3s ease;
+    }
+    
+    .scanner-container.active {
+        border: 3px solid #28a745 !important;
+        box-shadow: 0 0 20px rgba(40, 167, 69, 0.3) !important;
+    }
+    
+    /* Spinner para carga */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Factura {{ factura.numero }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { max-height: 80px; }
+        .info-factura { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .text-right { text-align: right; }
+        .totals { margin-top: 20px; float: right; width: 300px; }
+        .border-top { border-top: 2px solid #000; }
+        .text-success { color: #28a745; }
+        .text-info { color: #17a2b8; }
+        .section-title { font-weight: bold; margin-top: 15px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        {% if logo_url %}
+        <img src="{% static 'img/logo-empresa.png' %}" alt="Logo">
+        {% endif %}
+        <h2>Factura #{{ factura.id }}</h2>
+    </div>
+    
+    <div class="info-factura">
+        <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+        <p><strong>Cliente:</strong> {{ factura.cliente.nombre|default:"Consumidor Final" }}</p>
+        <p><strong>Tipo:</strong> {{ factura.get_tipo_venta_display }}</p>
+        <p><strong>Cajero:</strong> {{ factura.usuario.get_full_name|default:factura.usuario.username }}</p>
+    </div>
+    
+    <div class="section-title">Detalles de Productos</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>IVA (15%)</th>
+                <th>Total con IVA</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in detalles %}
+            <tr>
+                <td>{{ detalle.producto.nombre }}</td>
+                <td>{{ detalle.cantidad }}</td>
+                <td class="text-right">{{ detalle.moneda.simbolo|default:'$' }}{{ detalle.precio_unitario|floatformat:2 }}</td>
+                <td class="text-right">{{ detalle.moneda.simbolo|default:'$' }}{{ detalle.subtotal|floatformat:2 }}</td>
+                <td class="text-right">
+                    {% if detalle.iva %}
+                        {{ detalle.moneda.simbolo|default:'$' }}{{ detalle.iva_monto|floatformat:2 }}
+                    {% else %}
+                        {{ detalle.moneda.simbolo|default:'$' }}0.00
+                    {% endif %}
+                </td>
+                <td class="text-right">{{ detalle.moneda.simbolo|default:'$' }}{{ detalle.total_con_iva|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="totals">
+        <table class="table-borderless">
+            {% if detalles %}
+            {% with detalles.0 as primer_detalle %}
+            <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td class="text-right">{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.subtotal|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td><strong>Descuento:</strong></td>
+                <td class="text-right">{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.descuento|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td><strong>IVA Total:</strong></td>
+                <td class="text-right">{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.iva_total|floatformat:2 }}</td>
+            </tr>
+            <tr class="border-top">
+                <td><strong>Total:</strong></td>
+                <td class="text-right"><strong>{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.total|floatformat:2 }}</strong></td>
+            </tr>
+            {% endwith %}
+            {% else %}
+            <tr>
+                <td><strong>Subtotal:</strong></td>
+                <td class="text-right">${{ factura.subtotal|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td><strong>Descuento:</strong></td>
+                <td class="text-right">${{ factura.descuento|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td><strong>IVA Total:</strong></td>
+                <td class="text-right">${{ factura.iva_total|floatformat:2 }}</td>
+            </tr>
+            <tr class="border-top">
+                <td><strong>Total:</strong></td>
+                <td class="text-right"><strong>${{ factura.total|floatformat:2 }}</strong></td>
+            </tr>
+            {% endif %}
+            
+            <!-- Mostrar monto recibido y vuelto solo para ventas de contado -->
+            {% if factura.tipo_venta == 'contado' %}
+            {% if detalles %}
+                {% with detalles.0 as primer_detalle %}
+                <tr class="border-top">
+                    <td><strong>Monto Recibido:</strong></td>
+                    <td class="text-right"><strong class="text-success">{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.monto_recibido|floatformat:2 }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Vuelto:</strong></td>
+                    <td class="text-right"><strong class="text-info">{{ primer_detalle.moneda.simbolo|default:'$' }}{{ factura.vuelto|floatformat:2 }}</strong></td>
+                </tr>
+                {% endwith %}
+            {% else %}
+                <tr class="border-top">
+                    <td><strong>Monto Recibido:</strong></td>
+                    <td class="text-right"><strong class="text-success">${{ factura.monto_recibido|floatformat:2 }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Vuelto:</strong></td>
+                    <td class="text-right"><strong class="text-info">${{ factura.vuelto|floatformat:2 }}</strong></td>
+                </tr>
+            {% endif %}
+            {% endif %}
+        </table>
+    </div>
+</body>
+</html>

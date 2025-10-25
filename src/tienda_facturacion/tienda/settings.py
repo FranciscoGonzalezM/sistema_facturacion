@@ -27,12 +27,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-de-desarrollo')
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    '.onrender.com',
+    'https://sistema-facturacion-v5b1.onrender.com',
     'localhost',
     '127.0.0.1',
 ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
+    'https://sistema-facturacion-v5b1.onrender.com',
 ]
 
 # Application definition

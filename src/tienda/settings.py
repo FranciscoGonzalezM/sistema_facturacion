@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'categorias.apps.CategoriasConfig',
+    'tienda.categorias.apps.CategoriasConfig',
     'productos.apps.ProductosConfig',
     'clientes.apps.ClientesConfig',
     'facturas',

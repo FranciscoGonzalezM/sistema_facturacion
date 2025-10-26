@@ -6,8 +6,6 @@ from django.contrib.auth.views import LogoutView, PasswordResetView, PasswordRes
 from django.conf import settings
 from django.conf.urls.static import static
 from core.views import CustomLoginView, custom_logout
-from django.conf import settings
-from django.conf.urls.static import static
 import os
 
 urlpatterns = [
@@ -48,4 +46,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'tienda_facturacion', 'static'))
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

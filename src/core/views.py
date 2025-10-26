@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.views import LoginView
 from django.urls import reverse
@@ -117,7 +117,3 @@ def producto_create(request):
         form = ProductoForm()
         formset = CodigoProductoFormSet(queryset=CodigoProducto.objects.none())
     return render(request, 'core/producto_form.html', {'form': form, 'formset': formset})
-
-def custom_logout(request):
-    logout(request)
-    return redirect('login')

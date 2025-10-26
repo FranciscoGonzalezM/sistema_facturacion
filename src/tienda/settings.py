@@ -24,6 +24,10 @@ ALLOWED_HOSTS = [
     )
 ]
 
+# Para Render.com, agregar el host por defecto
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
+    ALLOWED_HOSTS = ['*']
+
 CSRF_TRUSTED_ORIGINS = [s for s in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if s]
 if render_host:
     CSRF_TRUSTED_ORIGINS.append(f"https://{_normalize_host(render_host)}")

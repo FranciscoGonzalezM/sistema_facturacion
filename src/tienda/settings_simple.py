@@ -16,15 +16,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'categorias.apps.CategoriasConfig',
-    'productos.apps.ProductosConfig',
-    'clientes.apps.ClientesConfig',
-    'facturas',
-    'proveedores',
-    'requiza',
-    'dashboard.apps.DashboardConfig',
-    'core',
-    'tienda.apps.TiendaConfig',
+    'src.categorias.apps.CategoriasConfig',
+    'src.productos.apps.ProductosConfig',
+    'src.clientes.apps.ClientesConfig',
+    'src.facturas',
+    'src.proveedores',
+    'src.requiza',
+    'src.dashboard.apps.DashboardConfig',
+    'src.core',
+    'src.tienda.apps.TiendaConfig',
 ]
 
 MIDDLEWARE = [
@@ -43,7 +43,7 @@ ROOT_URLCONF = 'tienda.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'core' / 'templates'],
+        'DIRS': [BASE_DIR / 'src' / 'core' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -82,7 +82,7 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'src' / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 

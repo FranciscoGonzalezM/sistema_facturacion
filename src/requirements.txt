@@ -8,3 +8,4 @@ reportlab==4.4.2
 xhtml2pdf==0.2.17
 stripe==12.5.0
 psycopg2-binary==2.9.9
+python-decouple==3.8

@@ -14,10 +14,6 @@ services:
         fromDatabase:
           name: sistema-facturacion-db
           property: connectionString
-    disk:
-      name: sistema-facturacion-disk
-      mountPath: /opt/render/project/src/media
-      sizeGB: 1
 
 databases:
   - name: sistema-facturacion-db

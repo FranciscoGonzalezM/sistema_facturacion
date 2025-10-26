@@ -7,7 +7,7 @@ import sys
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-sys.path.insert(0, os.path.join(BASE_DIR, 'src'))
+#sys.path.insert(0, os.path.join(BASE_DIR, 'src'))
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'inseguro-en-local')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -57,12 +57,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'categorias.apps.CategoriasConfig',
-    'productos.apps.ProductosConfig',
-    'clientes.apps.ClientesConfig',
-    'facturas',
-    'proveedores',
-    'requiza',
+    'srccategorias.apps.CategoriasConfig',
+    'src.productos.apps.ProductosConfig',
+    'src.clientes.apps.ClientesConfig',
+    'src.facturas',
+    'src.proveedores',
+    'src.requiza',
     'dashboard.apps.DashboardConfig',
     'core',
     'tienda.apps.TiendaConfig',

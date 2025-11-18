@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import CreateView, UpdateView
 
 # Importar modelos desde la app actual
-from .models import Producto, Categoria, CodigoProducto, Moneda, ConfiguracionTienda
+from .models import Producto, CodigoProducto, Moneda, ConfiguracionTienda
+from categorias.models import Categoria
 
 # Importar modelos externos
 from proveedores.models import Proveedor

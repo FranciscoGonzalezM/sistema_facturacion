@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from productos.models import Categoria  # Asumiendo que tienes una app productos
 
 class Proveedor(models.Model):
     TIPO_PROVEEDOR = [

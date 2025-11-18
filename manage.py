@@ -3,6 +3,10 @@
 import os
 import sys
 
+# Añadir la carpeta `src` al PYTHONPATH para que las apps dentro de `src/` sean importables
+PROJECT_ROOT = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(PROJECT_ROOT, 'src'))
+
 
 def main():
     """Run administrative tasks."""

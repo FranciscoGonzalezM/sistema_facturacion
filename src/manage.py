@@ -3,6 +3,10 @@
 import os
 import sys
 
+# Asegurar que el directorio actual (`src`) está en sys.path para poder importar apps locales
+CURRENT_DIR = os.path.dirname(__file__)
+sys.path.insert(0, CURRENT_DIR)
+
 
 def main():
     """Run administrative tasks."""

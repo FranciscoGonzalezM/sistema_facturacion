@@ -6,7 +6,9 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse
 from django.http import JsonResponse
 from clientes.models import Cliente
-from productos.models import Producto, Categoria
+from productos.models import Producto, CodigoProducto
+from productos.forms import CodigoProductoFormSet
+from categorias.models import Categoria
 from facturas.models import Factura
 from .models import Actividad
 from django.utils import timezone

@@ -1,9 +1,6 @@
 from django.db import models
-from categorias.models import Categoria
 from django.core.exceptions import ValidationError
 import uuid
-# Añade esta importación para la relación con Proveedor
-from proveedores.models import Proveedor
 
 class Moneda(models.Model):
     codigo = models.CharField(max_length=3, unique=True)  # USD, NIO, EUR, etc.
@@ -32,13 +29,13 @@ class ProductoManager(models.Manager):
 
 class Producto(models.Model):
     categoria = models.ForeignKey(
-        Categoria,
+        'categorias.Categoria',
         on_delete=models.CASCADE,
         verbose_name="Categoría"
     )
     # ✅ SOLO UNA definición de proveedor
     proveedor = models.ForeignKey(
-        Proveedor,
+        'proveedores.Proveedor',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

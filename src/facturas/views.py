@@ -453,8 +453,12 @@ Vendedor: {factura.usuario.get_full_name() or factura.usuario.username}
     doc.build(elements)
     return response
 
-# Configura tu API key de Stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
+# Inicialización de Stripe se hace de forma perezosa dentro de las vistas
+def _init_stripe():
+    key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+    if key:
+        stripe.api_key = key
+    return key
 
 def crear_pago_tarjeta(request, factura_id):
     # Esta vista acepta dos modos:
@@ -495,6 +499,9 @@ def crear_pago_tarjeta(request, factura_id):
             if not currency:
                 currency = getattr(settings, 'DEFAULT_CURRENCY', 'usd')
 
+        # Inicializar Stripe con la clave (si está configurada)
+        _init_stripe()
+
         # Crear un Payment Intent en Stripe
         intent = stripe.PaymentIntent.create(
             amount=int(monto * 100),  # Stripe usa centavos
@@ -512,9 +519,6 @@ def crear_pago_tarjeta(request, factura_id):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
 
 @csrf_exempt
 def webhook_stripe(request):
@@ -523,8 +527,9 @@ def webhook_stripe(request):
     sig_header = request.META['HTTP_STRIPE_SIGNATURE']
     
     try:
+        _init_stripe()
         event = stripe.Webhook.construct_event(
-            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+            payload, sig_header, getattr(settings, 'STRIPE_WEBHOOK_SECRET', None)
         )
     except ValueError as e:
         return HttpResponse(status=400)

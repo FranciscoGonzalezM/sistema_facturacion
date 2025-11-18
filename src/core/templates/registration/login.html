@@ -300,6 +300,14 @@
             <form method="post" action="{% url 'login' %}" id="loginForm" novalidate autocomplete="off">
                 {% csrf_token %}
                 <div class="form-group">
+                <div class="form-group">
+                    <label for="company">Empresa (opcional)</label>
+                    <input type="text" id="company" name="company" placeholder="Ingresa el nombre o slug de la empresa (ej: ACME)"
+                           aria-describedby="company-error" autocomplete="organization">
+                    <div class="error-text" id="company-error">Por favor ingresa el nombre de la empresa si aplica</div>
+                </div>
+
+                <div class="form-group">
                     <label for="username">Usuario</label>
                     <input type="text" id="username" name="username" placeholder="Ingresa tu usuario" required
                            aria-describedby="username-error" autocomplete="username" readonly

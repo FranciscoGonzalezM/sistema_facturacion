@@ -24,7 +24,13 @@ INSTALLED_APPS = [
     'requiza',
     'dashboard.apps.DashboardConfig',
     'core',
+    'organizaciones',
     'tienda.apps.TiendaConfig',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'organizaciones.auth_backends.TenantBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -34,6 +40,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'organizaciones.middleware.TenantMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

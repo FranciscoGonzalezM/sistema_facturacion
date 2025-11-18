@@ -9,20 +9,31 @@ from .models import Proveedor, ContactoProveedor, PedidoProveedor, ItemPedido
 from .forms import ProveedorForm, ContactoProveedorForm, PedidoProveedorForm, ItemPedidoForm
 from productos.models import Producto
 
-class ProveedorListView(LoginRequiredMixin, ListView):
+
+class TenantMixin:
+    def get_organizacion(self):
+        return getattr(self.request, 'organizacion', None)
+
+    def filter_by_organizacion(self, queryset):
+        org = self.get_organizacion()
+        if org is not None:
+            return queryset.filter(organizacion=org)
+        return queryset
+
+class ProveedorListView(TenantMixin, LoginRequiredMixin, ListView):
     model = Proveedor
     template_name = 'core/proveedor_list.html'
     context_object_name = 'proveedores'
     paginate_by = 10
-
+    # Scope lists to tenant
     def get_queryset(self):
         queryset = super().get_queryset()
-        
+        queryset = self.filter_by_organizacion(queryset)
         # Filtros
         search_query = self.request.GET.get('search', '')
         estado_filter = self.request.GET.get('estado', '')
         tipo_filter = self.request.GET.get('tipo', '')
-        
+
         if search_query:
             queryset = queryset.filter(
                 Q(nombre_empresa__icontains=search_query) |
@@ -31,13 +42,13 @@ class ProveedorListView(LoginRequiredMixin, ListView):
                 Q(ciudad__icontains=search_query) |
                 Q(rfc__icontains=search_query)
             )
-        
+
         if estado_filter:
             queryset = queryset.filter(estado=estado_filter)
-        
+
         if tipo_filter:
             queryset = queryset.filter(tipo_proveedor=tipo_filter)
-        
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -46,18 +57,25 @@ class ProveedorListView(LoginRequiredMixin, ListView):
         context['tipos_proveedor'] = Proveedor.TIPO_PROVEEDOR
         return context
 
-class ProveedorDetailView(LoginRequiredMixin, DetailView):
+class ProveedorDetailView(TenantMixin, LoginRequiredMixin, DetailView):
     model = Proveedor
     template_name = 'core/proveedor_detail.html'
     context_object_name = 'proveedor'
+
+    def get_queryset(self):
+        return self.filter_by_organizacion(super().get_queryset())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['contactos'] = self.object.contactos.all()
         context['pedidos'] = self.object.pedidos.all().order_by('-fecha_pedido')[:5]
-        
-        # Obtener productos relacionados con este proveedor
-        context['productos'] = Producto.objects.filter(proveedor=self.object)
+
+        # Obtener productos relacionados con este proveedor (scope by tenant when present)
+        org = getattr(self.request, 'organizacion', None)
+        productos_qs = Producto.objects.filter(proveedor=self.object)
+        if org is not None:
+            productos_qs = productos_qs.filter(organizacion=org)
+        context['productos'] = productos_qs
         
         # Estadísticas
         context['total_productos'] = context['productos'].count()
@@ -66,30 +84,42 @@ class ProveedorDetailView(LoginRequiredMixin, DetailView):
         
         return context
 
-class ProveedorCreateView(LoginRequiredMixin, CreateView):
+class ProveedorCreateView(TenantMixin, LoginRequiredMixin, CreateView):
     model = Proveedor
     form_class = ProveedorForm
     template_name = 'core/proveedor_form.html'
     success_url = reverse_lazy('proveedores:lista')
 
     def form_valid(self, form):
+        org = getattr(self.request, 'organizacion', None)
+        if org is not None:
+            form.instance.organizacion = org
         messages.success(self.request, 'Proveedor creado exitosamente.')
         return super().form_valid(form)
 
-class ProveedorUpdateView(LoginRequiredMixin, UpdateView):
+class ProveedorUpdateView(TenantMixin, LoginRequiredMixin, UpdateView):
     model = Proveedor
     form_class = ProveedorForm
     template_name = 'core/proveedor_form.html'
     success_url = reverse_lazy('proveedores:lista')
 
+    def get_queryset(self):
+        return self.filter_by_organizacion(super().get_queryset())
+
     def form_valid(self, form):
+        org = getattr(self.request, 'organizacion', None)
+        if org is not None:
+            form.instance.organizacion = org
         messages.success(self.request, 'Proveedor actualizado exitosamente.')
         return super().form_valid(form)
 
-class ProveedorDeleteView(LoginRequiredMixin, DeleteView):
+class ProveedorDeleteView(TenantMixin, LoginRequiredMixin, DeleteView):
     model = Proveedor
     template_name = 'core/proveedor_confirm_delete.html'
     success_url = reverse_lazy('proveedores:lista')
+
+    def get_queryset(self):
+        return self.filter_by_organizacion(super().get_queryset())
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Proveedor eliminado exitosamente.')
@@ -107,7 +137,10 @@ class ContactoCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def form_valid(self, form):
-        form.instance.proveedor_id = self.kwargs['proveedor_id']
+        proveedor_id = self.kwargs['proveedor_id']
+        org = getattr(self.request, 'organizacion', None)
+        proveedor = get_object_or_404(Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects, pk=proveedor_id)
+        form.instance.proveedor = proveedor
         messages.success(self.request, 'Contacto agregado exitosamente.')
         return super().form_valid(form)
 
@@ -142,7 +175,7 @@ class ContactoDeleteView(LoginRequiredMixin, DeleteView):
         return reverse_lazy('proveedores:detalle', kwargs={'pk': contacto.proveedor.id})
 
 # Vistas para Pedidos
-class PedidoCreateView(LoginRequiredMixin, CreateView):
+class PedidoCreateView(TenantMixin, LoginRequiredMixin, CreateView):
     model = PedidoProveedor
     form_class = PedidoProveedorForm
     template_name = 'core/pedido_form.html'
@@ -151,12 +184,14 @@ class PedidoCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         proveedor_id = self.kwargs.get('proveedor_id')
         context['proveedor_id'] = proveedor_id
-        context['proveedor'] = Proveedor.objects.get(pk=proveedor_id)
+        org = getattr(self.request, 'organizacion', None)
+        context['proveedor'] = get_object_or_404(Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects, pk=proveedor_id)
         return context
 
     def form_valid(self, form):
         proveedor_id = self.kwargs.get('proveedor_id')
-        form.instance.proveedor = Proveedor.objects.get(pk=proveedor_id)
+        org = getattr(self.request, 'organizacion', None)
+        form.instance.proveedor = get_object_or_404(Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects, pk=proveedor_id)
         form.instance.estado = 'pendiente'
         form.instance.total = 0
         messages.success(self.request, 'Pedido creado exitosamente.')
@@ -165,20 +200,26 @@ class PedidoCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('proveedores:detalle_pedido', kwargs={'pk': self.object.pk})
 
-class PedidoDetailView(LoginRequiredMixin, DetailView):
+class PedidoDetailView(TenantMixin, LoginRequiredMixin, DetailView):
     model = PedidoProveedor
     template_name = 'core/pedido_detail.html'
     context_object_name = 'pedido'
+
+    def get_queryset(self):
+        return self.filter_by_organizacion(super().get_queryset())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['items'] = self.object.items.all()
         return context
 
-class PedidoUpdateView(LoginRequiredMixin, UpdateView):
+class PedidoUpdateView(TenantMixin, LoginRequiredMixin, UpdateView):
     model = PedidoProveedor
     form_class = PedidoProveedorForm
     template_name = 'core/pedido_form.html'
+
+    def get_queryset(self):
+        return self.filter_by_organizacion(super().get_queryset())
 
     def form_valid(self, form):
         messages.success(self.request, 'Pedido actualizado exitosamente.')
@@ -187,9 +228,12 @@ class PedidoUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('proveedores:detalle_pedido', kwargs={'pk': self.object.pk})
 
-class PedidoDeleteView(LoginRequiredMixin, DeleteView):
+class PedidoDeleteView(TenantMixin, LoginRequiredMixin, DeleteView):
     model = PedidoProveedor
     template_name = 'core/pedido_confirm_delete.html'
+
+    def get_queryset(self):
+        return TenantMixin().filter_by_organizacion(super().get_queryset())
 
     def delete(self, request, *args, **kwargs):
         pedido = self.get_object()
@@ -216,7 +260,8 @@ class ItemPedidoCreateView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         pedido_id = self.kwargs.get('pedido_id')
-        pedido = PedidoProveedor.objects.get(pk=pedido_id)
+        org = getattr(self.request, 'organizacion', None)
+        pedido = get_object_or_404(PedidoProveedor.objects.filter(organizacion=org) if org is not None else PedidoProveedor.objects, pk=pedido_id)
         kwargs['proveedor_id'] = pedido.proveedor.id
         return kwargs
 
@@ -268,7 +313,8 @@ def buscar_proveedores(request):
     estado_filter = request.GET.get('estado', '')
     tipo_filter = request.GET.get('tipo', '')
     
-    proveedores = Proveedor.objects.all()
+    org = getattr(request, 'organizacion', None)
+    proveedores = Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects.all()
     
     if query:
         proveedores = proveedores.filter(
@@ -296,17 +342,22 @@ def buscar_proveedores(request):
 
 # Vista para dashboard de proveedor
 def proveedor_dashboard(request, pk):
-    proveedor = get_object_or_404(Proveedor, pk=pk)
+    org = getattr(request, 'organizacion', None)
+    proveedor = get_object_or_404(Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects, pk=pk)
     
     # Estadísticas
-    total_productos = Producto.objects.filter(proveedor=proveedor).count()
-    productos_activos = Producto.objects.filter(proveedor=proveedor, activo=True).count()
-    productos_bajo_stock = Producto.objects.filter(proveedor=proveedor, stock__lt=10).count()
-    
+    productos_qs = Producto.objects.filter(proveedor=proveedor)
+    if org is not None:
+        productos_qs = productos_qs.filter(organizacion=org)
+
+    total_productos = productos_qs.count()
+    productos_activos = productos_qs.filter(activo=True).count()
+    productos_bajo_stock = productos_qs.filter(stock__lt=10).count()
+
     # Últimos productos
-    ultimos_productos = Producto.objects.filter(proveedor=proveedor).order_by('-id')[:5]
-    
-    # Últimos pedidos
+    ultimos_productos = productos_qs.order_by('-id')[:5]
+
+    # Últimos pedidos (scoped by proveedor; pedidos are linked to proveedor)
     ultimos_pedidos = PedidoProveedor.objects.filter(proveedor=proveedor).order_by('-fecha_pedido')[:5]
     
     context = {

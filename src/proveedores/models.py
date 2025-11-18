@@ -1,7 +1,9 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from organizaciones.models import Organizacion
 
 class Proveedor(models.Model):
+    organizacion = models.ForeignKey(Organizacion, on_delete=models.CASCADE, null=True, blank=True, related_name='proveedores')
     TIPO_PROVEEDOR = [
         ('productos', 'Productos'),
         ('servicios', 'Servicios'),

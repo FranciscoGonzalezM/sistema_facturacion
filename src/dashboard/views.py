@@ -10,36 +10,35 @@ from django.http import JsonResponse
 
 
 def panel_administracion(request):
+    org = getattr(request, 'organizacion', None)
     # Totales generales
-    total_clientes = Cliente.objects.count()
-    total_productos = Producto.objects.count()
-    total_categorias = Categoria.objects.count()
-    total_facturas = Factura.objects.count()
-    
-    # Estadísticas mensuales
-    mes_actual = timezone.now().month
-    nuevos_clientes = Cliente.objects.filter(
-        fecha_registro__month=mes_actual
-    ).count()
-    
-    productos_bajo_stock = Producto.objects.filter(
-        stock__lt=10
-    ).count()
-    
-    ventas_mes_actual = Factura.objects.filter(
-        fecha__month=mes_actual
-    ).count()
-    
-    ingresos_mes_actual = Factura.objects.filter(
-        fecha__month=mes_actual
-    ).aggregate(Sum('total'))['total__sum'] or 0
-    
-    facturas_pendientes = Factura.objects.filter(
-        estado='pendiente'
-    ).count()
-    
-    # Actividad reciente
-    actividad_reciente = Actividad.objects.all().order_by('-fecha')[:5]
+    if org is not None:
+        total_clientes = Cliente.objects.filter(organizacion=org).count()
+        total_productos = Producto.objects.filter(organizacion=org).count()
+        total_categorias = Categoria.objects.count()
+        total_facturas = Factura.objects.filter(organizacion=org).count()
+        
+        # Estadísticas mensuales
+        mes_actual = timezone.now().month
+        nuevos_clientes = Cliente.objects.filter(fecha_registro__month=mes_actual, organizacion=org).count()
+        productos_bajo_stock = Producto.objects.filter(organizacion=org, stock__lt=10).count()
+        ventas_mes_actual = Factura.objects.filter(organizacion=org, fecha__month=mes_actual).count()
+        ingresos_mes_actual = Factura.objects.filter(organizacion=org, fecha__month=mes_actual).aggregate(Sum('total'))['total__sum'] or 0
+        facturas_pendientes = Factura.objects.filter(organizacion=org, estado='pendiente').count()
+        actividad_reciente = Actividad.objects.filter(usuario__organizaciones__organizacion=org).order_by('-fecha')[:5]
+    else:
+        total_clientes = Cliente.objects.count()
+        total_productos = Producto.objects.count()
+        total_categorias = Categoria.objects.count()
+        total_facturas = Factura.objects.count()
+        # Estadísticas mensuales
+        mes_actual = timezone.now().month
+        nuevos_clientes = Cliente.objects.filter(fecha_registro__month=mes_actual).count()
+        productos_bajo_stock = Producto.objects.filter(stock__lt=10).count()
+        ventas_mes_actual = Factura.objects.filter(fecha__month=mes_actual).count()
+        ingresos_mes_actual = Factura.objects.filter(fecha__month=mes_actual).aggregate(Sum('total'))['total__sum'] or 0
+        facturas_pendientes = Factura.objects.filter(estado='pendiente').count()
+        actividad_reciente = Actividad.objects.all().order_by('-fecha')[:5]
     
     context = {
         'total_clientes': total_clientes,

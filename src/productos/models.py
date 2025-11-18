@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 import uuid
+from organizaciones.models import Organizacion
 
 class Moneda(models.Model):
     codigo = models.CharField(max_length=3, unique=True)  # USD, NIO, EUR, etc.
@@ -28,6 +29,7 @@ class ProductoManager(models.Manager):
         return super().get_queryset().filter(activo=True)
 
 class Producto(models.Model):
+    organizacion = models.ForeignKey(Organizacion, on_delete=models.CASCADE, null=True, blank=True, related_name='productos')
     categoria = models.ForeignKey(
         'categorias.Categoria',
         on_delete=models.CASCADE,

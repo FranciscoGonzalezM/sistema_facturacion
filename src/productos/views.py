@@ -29,7 +29,8 @@ def producto_list(request):
     moneda_id = request.GET.get('moneda', '')
     estado = request.GET.get('estado', '')
     
-    productos = Producto.objects.all()
+    org = getattr(request, 'organizacion', None)
+    productos = Producto.objects.filter(organizacion=org) if org is not None else Producto.objects.all()
     if search_query:
         productos = productos.filter(
             Q(nombre__icontains=search_query) |
@@ -58,12 +59,13 @@ def producto_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     categorias = Categoria.objects.all()
-    proveedores = Proveedor.objects.filter(estado='activo')
+    org = getattr(request, 'organizacion', None)
+    proveedores = Proveedor.objects.filter(organizacion=org, estado='activo') if org is not None else Proveedor.objects.filter(estado='activo')
     monedas = Moneda.objects.all()
-    # Estadísticas rápidas usadas en la plantilla
-    total_productos = Producto.objects.count()
-    productos_activos = Producto.objects.filter(activo=True).count()
-    stock_bajo_count = Producto.objects.filter(stock__lt=10).count()
+    # Estadísticas rápidas usadas en la plantilla (scope por organización)
+    total_productos = Producto.objects.filter(organizacion=org).count() if org is not None else Producto.objects.count()
+    productos_activos = Producto.objects.filter(organizacion=org, activo=True).count() if org is not None else Producto.objects.filter(activo=True).count()
+    stock_bajo_count = Producto.objects.filter(organizacion=org, stock__lt=10).count() if org is not None else Producto.objects.filter(stock__lt=10).count()
     total_monedas = monedas.count()
     context = {
         'productos': page_obj,
@@ -85,7 +87,11 @@ def producto_create(request):
         form = ProductoForm(request.POST)
         # Validamos el producto primero
         if form.is_valid():
-            producto = form.save()  # guardamos el producto para tener PK
+            producto = form.save(commit=False)
+            org = getattr(request, 'organizacion', None)
+            if org is not None:
+                producto.organizacion = org
+            producto.save()  # guardamos el producto para tener PK
             # Ahora instanciamos el formset ligado al producto (instance) y con prefix
             formset = CodigoProductoFormSet(request.POST, instance=producto, prefix=formset_prefix)
             if formset.is_valid():
@@ -110,7 +116,8 @@ def obtener_monedas(request):
 # Editar producto con múltiples códigos (corregido)
 @staff_member_required
 def producto_edit(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
+    org = getattr(request, 'organizacion', None)
+    producto = get_object_or_404(Producto.objects.filter(organizacion=org) if org is not None else Producto.objects, pk=pk)
     formset_prefix = 'codigos'
     if request.method == 'POST':
         form = ProductoForm(request.POST, instance=producto)
@@ -130,7 +137,8 @@ def producto_edit(request, pk):
 # Eliminar producto
 @staff_member_required
 def producto_delete(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
+    org = getattr(request, 'organizacion', None)
+    producto = get_object_or_404(Producto.objects.filter(organizacion=org) if org is not None else Producto.objects, pk=pk)
     if request.method == "POST":
         producto.delete()
         messages.success(request, 'Producto eliminado exitosamente.')
@@ -145,10 +153,12 @@ def buscar_producto_por_codigo(request):
         return JsonResponse({'error': 'Código no proporcionado'}, status=400)
     
     try:
-        # Buscar el código en los códigos de barras o QR
-        codigo_producto = CodigoProducto.objects.get(
-            Q(codigo_barra=codigo) | Q(codigo_qr=codigo)
-        )
+        # Buscar el código en los códigos de barras o QR, respetando organización
+        org = getattr(request, 'organizacion', None)
+        codigo_qs = CodigoProducto.objects.filter(Q(codigo_barra=codigo) | Q(codigo_qr=codigo))
+        if org is not None:
+            codigo_qs = codigo_qs.filter(producto__organizacion=org)
+        codigo_producto = codigo_qs.select_related('producto').get()
         
         producto = codigo_producto.producto
         
@@ -181,7 +191,8 @@ def buscar_producto_por_codigo(request):
 
 # Listar productos por proveedor específico
 def productos_por_proveedor(request, proveedor_id):
-    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    org = getattr(request, 'organizacion', None)
+    proveedor = get_object_or_404(Proveedor.objects.filter(organizacion=org) if org is not None else Proveedor.objects, id=proveedor_id)
     productos = Producto.objects.filter(proveedor=proveedor)
     
     # Obtener parámetros de filtrado
@@ -282,7 +293,10 @@ def configurar_tienda(request):
 # Vista actualizada de lista_productos con estadísticas
 @login_required
 def lista_productos(request):
+    org = getattr(request, 'organizacion', None)
     productos = Producto.all_objects.all().select_related('categoria', 'proveedor', 'moneda').prefetch_related('codigos')
+    if org is not None:
+        productos = productos.filter(organizacion=org)
     
     # Aplicar filtros
     search = request.GET.get('search', '')
@@ -314,10 +328,11 @@ def lista_productos(request):
         elif estado_filter == 'inactivo':
             productos = productos.filter(activo=False)
     
-    # Estadísticas para el template
-    total_productos = Producto.all_objects.count()
-    productos_activos = Producto.objects.count()  # Solo activos
-    stock_bajo_count = Producto.all_objects.filter(stock__lt=10).count()
+    # Estadísticas para el template (scoped)
+    total_products_qs = Producto.all_objects.filter(organizacion=org) if org is not None else Producto.all_objects
+    total_productos = total_products_qs.count()
+    productos_activos = Producto.objects.filter(organizacion=org).count() if org is not None else Producto.objects.count()
+    stock_bajo_count = total_products_qs.filter(stock__lt=10).count()
     total_monedas = Moneda.objects.count()
     
     # Paginación

@@ -17,6 +17,7 @@ class Factura(models.Model):
     ]
 
     fecha = models.DateTimeField(default=timezone.now)
+    organizacion = models.ForeignKey('organizaciones.Organizacion', on_delete=models.CASCADE, null=True, blank=True, related_name='facturas')
     cliente = models.ForeignKey('clientes.Cliente', on_delete=models.SET_NULL, null=True, blank=True)
     usuario = models.ForeignKey('auth.User', on_delete=models.PROTECT)
     tipo_venta = models.CharField(max_length=10, choices=TIPO_VENTA_CHOICES, default='contado')

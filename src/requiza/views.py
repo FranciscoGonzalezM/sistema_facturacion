@@ -11,7 +11,8 @@ def es_gerente(user):
 
 @login_required
 def listar_requizas(request):
-    requizas = Requiza.objects.all().order_by('-fecha')
+    org = getattr(request, 'organizacion', None)
+    requizas = Requiza.objects.filter(producto__organizacion=org).order_by('-fecha') if org is not None else Requiza.objects.all().order_by('-fecha')
     return render(request, 'core/requiza_list.html', {'requizas': requizas})
 
 

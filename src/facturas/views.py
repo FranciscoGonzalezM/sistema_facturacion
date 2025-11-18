@@ -45,6 +45,7 @@ def es_vendedor(user):
 @user_passes_test(es_vendedor)
 @transaction.atomic
 def facturar(request):
+    org = getattr(request, 'organizacion', None)
     if request.method == 'POST':
         form = FacturaForm(request.POST)
         print("POST data:", dict(request.POST))  # 👀 solo debug, quítalo en producción
@@ -57,7 +58,10 @@ def facturar(request):
 
         if codigo_barra:
             try:
-                producto = Producto.objects.get(codigo_barra=codigo_barra, activo=True)
+                if org is not None:
+                    producto = Producto.objects.get(codigo_barra=codigo_barra, activo=True, organizacion=org)
+                else:
+                    producto = Producto.objects.get(codigo_barra=codigo_barra, activo=True)
                 if producto.stock <= 0:
                     messages.error(request, f"❌ El producto '{producto.nombre}' no tiene stock disponible.")
                     return redirect('facturas:facturar')
@@ -81,6 +85,8 @@ def facturar(request):
             try:
                 # Crear factura en memoria
                 factura = form.save(commit=False)
+                if org is not None:
+                    factura.organizacion = org
                 factura.usuario = request.user
                 factura.metodo_pago = request.POST.get('metodo_pago', 'efectivo')
                 factura.id_transaccion = request.POST.get('id_transaccion', '')
@@ -110,7 +116,10 @@ def facturar(request):
                     productos_data = json.loads(productos_json)
 
                 ids = [int(p['id']) for p in productos_data]
-                productos = {p.id: p for p in Producto.objects.select_related('moneda').filter(id__in=ids)}
+                productos_qs = Producto.objects.select_related('moneda').filter(id__in=ids)
+                if org is not None:
+                    productos_qs = productos_qs.filter(organizacion=org)
+                productos = {p.id: p for p in productos_qs}
 
                 for prod_data in productos_data:
                     producto = productos.get(int(prod_data['id']))
@@ -160,12 +169,14 @@ def facturar(request):
     else:
         form = FacturaForm()
         productos_con_moneda = Producto.objects.select_related('moneda').filter(stock__gt=0, activo=True)
+        if org is not None:
+            productos_con_moneda = productos_con_moneda.filter(organizacion=org)
      
     return render(request, 'core/facturar.html', {
         'form': form,
         'productos': productos_con_moneda,
-        'clientes': Cliente.objects.all(),
-        'numero_factura': Factura.objects.count() + 1
+        'clientes': Cliente.objects.filter(organizacion=org) if org is not None else Cliente.objects.all(),
+        'numero_factura': Factura.objects.filter(organizacion=org).count() + 1 if org is not None else Factura.objects.count() + 1
     })
     
 
@@ -173,7 +184,8 @@ def facturar(request):
 @login_required
 @user_passes_test(es_admin_o_vendedor)
 def factura_list(request):
-    facturas = Factura.objects.all().order_by('-fecha')
+    org = getattr(request, 'organizacion', None)
+    facturas = Factura.objects.filter(organizacion=org).order_by('-fecha') if org is not None else Factura.objects.all().order_by('-fecha')
     # Añadir información de moneda por factura (predominante o mezcla)
     for factura in facturas:
         detalles = factura.detalles.all()
@@ -198,7 +210,8 @@ def factura_list(request):
 
 @login_required
 def factura_detalle(request, pk):
-    factura = get_object_or_404(Factura, pk=pk)
+    org = getattr(request, 'organizacion', None)
+    factura = get_object_or_404(Factura.objects.filter(organizacion=org) if org is not None else Factura.objects, pk=pk)
     detalles = factura.detalles.all()
     for detalle in detalles:
         if detalle.iva:
@@ -215,7 +228,8 @@ def factura_detalle(request, pk):
 @login_required
 @user_passes_test(es_admin_o_vendedor)
 def factura_pdf(request, pk):
-    factura = get_object_or_404(Factura, id=pk)
+    org = getattr(request, 'organizacion', None)
+    factura = get_object_or_404(Factura.objects.filter(organizacion=org) if org is not None else Factura.objects, id=pk)
     detalles = factura.detalles.all()
     for detalle in detalles:
         detalle.iva_monto = detalle.subtotal * Decimal('0.19') if detalle.iva else Decimal('0.00')
@@ -469,6 +483,7 @@ def crear_pago_tarjeta(request, factura_id):
     currency = None
 
     try:
+        org = getattr(request, 'organizacion', None)
         if request.method == 'POST' and request.content_type == 'application/json':
             body = json.loads(request.body.decode('utf-8') or '{}')
             monto = Decimal(str(body.get('monto', '0')))
@@ -476,11 +491,17 @@ def crear_pago_tarjeta(request, factura_id):
             # si se envia factura_id en body
             factura_id_body = body.get('factura_id')
             if factura_id_body:
-                factura = Factura.objects.filter(id=int(factura_id_body)).first()
+                if org is not None:
+                    factura = Factura.objects.filter(organizacion=org, id=int(factura_id_body)).first()
+                else:
+                    factura = Factura.objects.filter(id=int(factura_id_body)).first()
 
         # Si no vino por POST JSON y se proporcionó factura_id por URL
         if not monto and factura_id:
-            factura = Factura.objects.filter(id=factura_id).first()
+            if org is not None:
+                factura = Factura.objects.filter(organizacion=org, id=factura_id).first()
+            else:
+                factura = Factura.objects.filter(id=factura_id).first()
             if factura:
                 monto = factura.total
                 currency = 'usd'  # fallback
@@ -540,15 +561,17 @@ def webhook_stripe(request):
     if event.type == 'payment_intent.succeeded':
         payment_intent = event.data.object
         factura_id = payment_intent.metadata.get('factura_id')
-        
+
         if factura_id:
             try:
-                factura = Factura.objects.get(id=factura_id)
-                factura.estado_pago = 'completado'
-                factura.id_transaccion = payment_intent.id
-                factura.pagada = True
-                factura.save()
-            except Factura.DoesNotExist:
+                # Webhooks are external and may not include org context; attempt to find by id.
+                factura = Factura.objects.filter(id=factura_id).first()
+                if factura:
+                    factura.estado_pago = 'completado'
+                    factura.id_transaccion = payment_intent.id
+                    factura.pagada = True
+                    factura.save()
+            except Exception:
                 pass
     
     return HttpResponse(status=200)

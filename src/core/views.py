@@ -80,12 +80,21 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         user = self.request.user
+        # If user is a superuser or staff, send to admin panel
         if user.is_superuser or user.is_staff:
             return reverse('admin_inicio')
+        # If user belongs to the 'cajeros' group, send to facturar
         elif user.groups.filter(name='cajeros').exists():
             return reverse('facturas:facturar')
-        else:
-            return reverse('inicio')
+        # If user is a member of any Organizacion (tenant), send to tenant dashboard
+        try:
+            if user.organizaciones.exists():
+                return reverse('tenant_dashboard')
+        except Exception:
+            pass
+
+        # Default fallback
+        return reverse('inicio')
 
 # --- Panel de administración con estadísticas ---
 @login_required

@@ -112,7 +112,8 @@ def panel_administracion(request):
         productos_bajo_stock = Producto.objects.filter(organizacion=org, stock__lt=10).count()
         ventas_mes_actual = Factura.objects.filter(organizacion=org, fecha__month=mes_actual).count()
         ingresos_mes_actual = Factura.objects.filter(organizacion=org, fecha__month=mes_actual).aggregate(Sum('total'))['total__sum'] or 0
-        facturas_pendientes = Factura.objects.filter(organizacion=org, estado='pendiente').count()
+        # 'Factura' does not have an 'estado' field; use 'pagada=False' to count pending invoices
+        facturas_pendientes = Factura.objects.filter(organizacion=org, pagada=False).count()
         actividad_reciente = Actividad.objects.filter(usuario__organizaciones__organizacion=org).order_by('-fecha')[:5]
     else:
         total_clientes = Cliente.objects.count()

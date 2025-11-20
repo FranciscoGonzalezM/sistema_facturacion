@@ -34,14 +34,24 @@ from django.views.decorators.csrf import csrf_exempt
 # ---- Funciones de permisos ----
 def es_admin_o_vendedor(user):
     """Verifica si el usuario es admin o pertenece a grupos de vendedores/cajeros"""
-    return user.is_staff or user.groups.filter(name__in=['Vendedores', 'cajeros']).exists()
+    # Allow staff, group-based sellers, or organization members with owner/admin role
+    try:
+        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin']).exists()
+    except Exception:
+        org_member = False
+    return user.is_staff or user.groups.filter(name__in=['Vendedores', 'cajeros']).exists() or org_member
 
 def es_vendedor(user):
     """Verifica si el usuario es vendedor o cajero"""
-    return user.is_staff or user.groups.filter(name='cajeros').exists()
+    # Allow staff, cajeros group, or organization owner/admin to act as vendedor
+    try:
+        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin']).exists()
+    except Exception:
+        org_member = False
+    return user.is_staff or user.groups.filter(name='cajeros').exists() or org_member
 
 # ---- Vista principal de facturación ----
-@login_required
+@login_required(login_url='/login/')
 @user_passes_test(es_vendedor)
 @transaction.atomic
 def facturar(request):

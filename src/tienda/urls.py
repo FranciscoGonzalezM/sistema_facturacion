@@ -37,11 +37,11 @@ urlpatterns = [
     path('categorias/', include('categorias.urls')),
     path('facturas/', include(('facturas.urls','facturas'), namespace='facturas')),
     path('proveedores/', include(('proveedores.urls', 'proveedores'), namespace='proveedores')),
-        path('organizacion/', include('organizaciones.urls')),
+    path('organizacion/', include('organizaciones.urls')),
     path('requizas/', include('requiza.urls')),
-    # Core/dashboard
-    path('dashboard/', include('core.urls')),
     
+    
+    path('dashboard/', include(('core.urls', 'core'), namespace='core')),   # ahora Django encuentra 'facturar'
     # Redirección raíz
     path('', lambda request: redirect('login')),
 ]

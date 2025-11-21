@@ -44,9 +44,9 @@ def admin_inicio(request):
 def inicio(request):
     user = request.user
     if user.is_superuser or user.is_staff:
-        return redirect('admin_inicio')
+        return redirect('core:admin_inicio')
     elif user.groups.filter(name='cajeros').exists():
-        return redirect('facturar')
+        return redirect('core:facturar')
     else:
         messages.error(request, "No tienes permisos para acceder.")
         return redirect('login')
@@ -82,19 +82,19 @@ class CustomLoginView(LoginView):
         user = self.request.user
         # If user is a superuser or staff, send to admin panel
         if user.is_superuser or user.is_staff:
-            return reverse('admin_inicio')
+            return reverse('core:admin_inicio')
         # If user belongs to the 'cajeros' group, send to facturar
         elif user.groups.filter(name='cajeros').exists():
             return reverse('facturas:facturar')
         # If user is a member of any Organizacion (tenant), send to tenant dashboard
         try:
             if user.organizaciones.exists():
-                return reverse('tenant_dashboard')
+                return reverse('core:tenant_dashboard')
         except Exception:
             pass
 
         # Default fallback
-        return reverse('inicio')
+        return reverse('core:inicio')
 
 # --- Panel de administración con estadísticas ---
 @login_required

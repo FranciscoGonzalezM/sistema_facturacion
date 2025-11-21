@@ -7,7 +7,7 @@ from productos.models import Producto, Categoria
 from ventas.models import Factura
 from .models import Actividad
 from django.http import JsonResponse
-
+from requisas.models import Requisa
 
 def panel_administracion(request):
     org = getattr(request, 'organizacion', None)
@@ -17,7 +17,7 @@ def panel_administracion(request):
         total_productos = Producto.objects.filter(organizacion=org).count()
         total_categorias = Categoria.objects.count()
         total_facturas = Factura.objects.filter(organizacion=org).count()
-        
+        total_requizas = Requisa.objects.filter(organizacion=org).count()
         # Estadísticas mensuales
         mes_actual = timezone.now().month
         nuevos_clientes = Cliente.objects.filter(fecha_registro__month=mes_actual, organizacion=org).count()
@@ -31,6 +31,7 @@ def panel_administracion(request):
         total_productos = Producto.objects.count()
         total_categorias = Categoria.objects.count()
         total_facturas = Factura.objects.count()
+        total_requizas = Requisa.objects.count()
         # Estadísticas mensuales
         mes_actual = timezone.now().month
         nuevos_clientes = Cliente.objects.filter(fecha_registro__month=mes_actual).count()
@@ -45,12 +46,14 @@ def panel_administracion(request):
         'total_productos': total_productos,
         'total_categorias': total_categorias,
         'total_facturas': total_facturas,
+        'total_requizas': total_requizas, 
         'nuevos_clientes': nuevos_clientes,
         'productos_bajo_stock': productos_bajo_stock,
         'ventas_mes_actual': ventas_mes_actual,
         'ingresos_mes_actual': ingresos_mes_actual,
         'facturas_pendientes': facturas_pendientes,
         'actividad_reciente': actividad_reciente,
+        
     }
     
     return render(request, 'dashboard/dashboard.html', context)

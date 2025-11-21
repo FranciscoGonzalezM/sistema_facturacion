@@ -3,7 +3,6 @@ from django.urls import path
 from . import views
 
 app_name = 'facturas'
-
 urlpatterns = [
     path('nueva/', views.facturar, name='facturar'),
     path('', views.factura_list, name='factura_list'),

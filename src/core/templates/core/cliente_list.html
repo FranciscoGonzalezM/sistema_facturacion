@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Listado de Clientes</h4>
         <div class="d-flex gap-2">
-            <a href="{% url 'cliente_create' %}" class="btn btn-success">
+            <a href="{% url 'clientes:cliente_create' %}" class="btn btn-success">
                 <i class="fas fa-plus"></i> Crear Cliente
             </a>
             <a href="javascript:history.back()" class="btn btn-secondary">
@@ -33,10 +33,10 @@
                 <td>{{ cliente.email }}</td>
                 <td>{{ cliente.telefono }}</td>
                 <td>
-                    <a href="{% url 'cliente_update' cliente.id %}" class="btn btn-sm btn-warning">
+                    <a href="{% url 'clientes:cliente_update' cliente.id %}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i> Editar
                     </a>
-                    <a href="{% url 'cliente_delete' cliente.id %}" class="btn btn-sm btn-danger">
+                    <a href="{% url 'clientes:cliente_delete' cliente.id %}" class="btn btn-sm btn-danger">
                         <i class="fas fa-trash"></i> Eliminar
                     </a>
                 </td>

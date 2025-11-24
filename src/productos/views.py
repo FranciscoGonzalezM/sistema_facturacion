@@ -2,6 +2,7 @@
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -80,9 +81,13 @@ def producto_list(request):
     return render(request, 'core/producto_list.html', context)
 
 # Crear producto con múltiples códigos (corregido)
-@staff_member_required
+@login_required
 def producto_create(request):
     formset_prefix = 'codigos'
+    org = getattr(request, 'organizacion', None)
+    # Allow staff or organization owner/admin
+    if not (request.user.is_staff or (org is not None and request.user.organizaciones.filter(organizacion=org, role__in=['owner','admin']).exists())):
+        raise PermissionDenied()
     if request.method == 'POST':
         form = ProductoForm(request.POST)
         # Validamos el producto primero
@@ -97,7 +102,7 @@ def producto_create(request):
             if formset.is_valid():
                 formset.save()
                 messages.success(request, 'Producto creado exitosamente.')
-                return redirect('producto_list')
+                return redirect('productos:producto_list')
             else:
                 # Mostrar errores del formset
                 messages.error(request, 'Corrige los errores en los códigos.')
@@ -114,10 +119,13 @@ def obtener_monedas(request):
     return render(request, 'monedas/lista.html', {'monedas': monedas})
 
 # Editar producto con múltiples códigos (corregido)
-@staff_member_required
+@login_required
 def producto_edit(request, pk):
     org = getattr(request, 'organizacion', None)
     producto = get_object_or_404(Producto.objects.filter(organizacion=org) if org is not None else Producto.objects, pk=pk)
+    # Permission: staff or owner/admin of the organization
+    if not (request.user.is_staff or (org is not None and request.user.organizaciones.filter(organizacion=org, role__in=['owner','admin']).exists())):
+        raise PermissionDenied()
     formset_prefix = 'codigos'
     if request.method == 'POST':
         form = ProductoForm(request.POST, instance=producto)
@@ -126,7 +134,7 @@ def producto_edit(request, pk):
             form.save()
             formset.save()
             messages.success(request, 'Producto actualizado exitosamente.')
-            return redirect('producto_list')
+            return redirect('productos:producto_list')
         else:
             messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
@@ -135,14 +143,17 @@ def producto_edit(request, pk):
     return render(request, 'core/producto_form.html', {'form': form, 'formset': formset})
 
 # Eliminar producto
-@staff_member_required
+@login_required
 def producto_delete(request, pk):
     org = getattr(request, 'organizacion', None)
     producto = get_object_or_404(Producto.objects.filter(organizacion=org) if org is not None else Producto.objects, pk=pk)
+    # Permission: staff or owner/admin of the organization
+    if not (request.user.is_staff or (org is not None and request.user.organizaciones.filter(organizacion=org, role__in=['owner','admin']).exists())):
+        raise PermissionDenied()
     if request.method == "POST":
         producto.delete()
         messages.success(request, 'Producto eliminado exitosamente.')
-        return redirect('producto_list')
+        return redirect('productos:producto_list')
     return render(request, 'core/producto_confirm_delete.html', {'object': producto})
 
 # Búsqueda rápida para facturación - Busca por código de barras o QR

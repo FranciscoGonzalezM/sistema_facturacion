@@ -1,4 +1,5 @@
 {% load static %}
+{% load org_tags %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -36,15 +37,24 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-cogs me-2"></i>Panel de Administración
-            </a>
-            <div class="d-flex align-items-center">
+            {# Company logo + name on the left. Falls back to generic title #}
+            {% if request.organizacion and request.organizacion.logo %}
+                <a class="navbar-brand d-flex align-items-center" href="{% if user.is_authenticated %}{% if user.is_staff or user.is_superuser %}{% url 'core:admin_inicio' %}{% elif request.organizacion %}{% url 'core:tenant_dashboard' %}{% else %}{% url 'core:inicio' %}{% endif %}{% else %}{% url 'login' %}{% endif %}" style="display:inline-flex; align-items:center; gap:8px;">
+                    <img src="{{ request.organizacion.logo.url }}" alt="Logo" style="height:36px; width:auto; border-radius:4px; order:0;"/>
+                    <span class="text-white" style="order:1;">{{ request.organizacion.nombre }}</span>
+                </a>
+            {% else %}
+                <a class="navbar-brand" href="{% if user.is_authenticated %}{% if user.is_staff or user.is_superuser %}{% url 'core:admin_inicio' %}{% elif request.organizacion %}{% url 'core:tenant_dashboard' %}{% else %}{% url 'core:inicio' %}{% endif %}{% else %}{% url 'login' %}{% endif %}">
+                    <i class="fas fa-cogs me-2"></i>Panel de Administración
+                </a>
+            {% endif %}
+
+            <div class="d-flex align-items-center ms-auto">
                 <span class="text-white me-3">Bienvenido, {{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
             </div>
-            <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
-                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-            </a>
         </div>
     </nav>
 
@@ -56,31 +66,43 @@
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="{% url 'core:admin_inicio' %}" class="nav-link">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span class="link-text">Dashboard</span>
-                    <span class="tooltip-text">Dashboard</span>
-                </a>
+                {% comment %}Go to admin dashboard if staff, otherwise tenant dashboard if member.{% endcomment %}
+                {% if user.is_authenticated %}
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="{% url 'core:admin_inicio' %}" class="nav-link">
+                    {% elif request.organizacion %}
+                        <a href="{% url 'core:tenant_dashboard' %}" class="nav-link">
+                    {% else %}
+                        <a href="{% url 'core:inicio' %}" class="nav-link">
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">
+                {% endif %}
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="link-text">Dashboard</span>
+                        <span class="tooltip-text">Dashboard</span>
+                    </a>
             </li>
 
-            {% if request.user.is_staff %}
-            <!-- Opciones solo para administradores -->
+            {% is_org_role 'owner,admin' as is_org_admin %}
+                        {% if request.user.is_staff or is_org_admin %}
+                        <!-- Opciones para administradores del tenant o staff -->
             <li class="nav-item">
-                <a href="{% url 'core:cliente_list' %}" class="nav-link">
+                <a href="{% url 'clientes:cliente_list' %}" class="nav-link">
                     <i class="fas fa-users"></i>
                     <span class="link-text">Clientes</span>
                     <span class="tooltip-text">Clientes</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'core:producto_list' %}" class="nav-link">
+                <a href="{% url 'productos:producto_list' %}" class="nav-link">
                     <i class="fas fa-box-open"></i>
                     <span class="link-text">Productos</span>
                     <span class="tooltip-text">Productos</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'core:categoria_list' %}" class="nav-link">
+                <a href="{% url 'categorias:categoria_list' %}" class="nav-link">
                     <i class="fas fa-tags"></i>
                     <span class="link-text">Categorías</span>
                     <span class="tooltip-text">Categorías</span>
@@ -94,7 +116,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{% url 'core:requiza_list' %}" class="nav-link">
+                <a href="{% url 'requiza:requiza_list' %}" class="nav-link">
                     <i class="fas fa-clipboard-list"></i>
                     <span class="link-text">Requizas</span>
                     <span class="tooltip-text">Requizas</span>

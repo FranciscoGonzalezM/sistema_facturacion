@@ -36,7 +36,7 @@ def es_admin_o_vendedor(user):
     """Verifica si el usuario es admin o pertenece a grupos de vendedores/cajeros"""
     # Allow staff, group-based sellers, or organization members with owner/admin role
     try:
-        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin']).exists()
+        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin', 'cajero']).exists()
     except Exception:
         org_member = False
     return user.is_staff or user.groups.filter(name__in=['Vendedores', 'cajeros']).exists() or org_member
@@ -45,7 +45,7 @@ def es_vendedor(user):
     """Verifica si el usuario es vendedor o cajero"""
     # Allow staff, cajeros group, or organization owner/admin to act as vendedor
     try:
-        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin']).exists()
+        org_member = getattr(user, 'organizaciones', None) and user.organizaciones.filter(role__in=['owner', 'admin', 'cajero']).exists()
     except Exception:
         org_member = False
     return user.is_staff or user.groups.filter(name='cajeros').exists() or org_member

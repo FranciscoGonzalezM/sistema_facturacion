@@ -28,6 +28,7 @@ class Miembro(models.Model):
         ('owner', 'Owner'),
         ('admin', 'Admin'),
         ('user', 'User'),
+        ('cajero', 'Cajero'),
     )
 
     organizacion = models.ForeignKey(Organizacion, on_delete=models.CASCADE, related_name='miembros')

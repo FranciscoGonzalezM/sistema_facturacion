@@ -13,7 +13,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Clientes</h5>
                     <p class="display-4">{{ total_clientes }}</p>
-                    <a href="{% url 'cliente_list' %}" class="btn btn-primary">
+                    <a href="{% url 'clientes:cliente_list' %}" class="btn btn-primary">
                         Administrar
                     </a>
                 </div>
@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Productos</h5>
                     <p class="display-4">{{ total_productos }}</p>
-                    <a href="{% url 'producto_list' %}" class="btn btn-primary">
+                    <a href="{% url 'productos:producto_list' %}" class="btn btn-primary">
                         Administrar
                     </a>
                 </div>
@@ -49,7 +49,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Requizas</h5>
                     <p class="display-4">{{ total_requizas }}</p>
-                    <a href="{% url 'requiza_list' %}" class="btn btn-primary">
+                    <a href="{% url 'requiza:requiza_list' %}" class="btn btn-primary">
                         Administrar
                     </a>
                 </div>

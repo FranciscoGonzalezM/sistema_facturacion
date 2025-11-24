@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="javascript:history.back()" class="btn btn-secondary">⬅ Volver</a>
         <h2 class="mb-0">{{ form.instance.pk|yesno:"Editar Cliente,Nuevo Cliente" }}</h2>
-        <a href="{% url 'cliente_list' %}" class="btn btn-info">Lista de Clientes</a>
+        <a href="{% url 'clientes:cliente_list' %}" class="btn btn-info">Lista de Clientes</a>
     </div>
     
     <form method="post" class="border p-4 rounded bg-light">
@@ -27,7 +27,7 @@
             <button type="submit" class="btn btn-success">
                 <i class="bi bi-save"></i> Guardar
             </button>
-            <a href="{% url 'cliente_list' %}" class="btn btn-secondary">
+            <a href="{% url 'clientes:cliente_list' %}" class="btn btn-secondary">
                 <i class="bi bi-x-circle"></i> Cancelar
             </a>
         </div>

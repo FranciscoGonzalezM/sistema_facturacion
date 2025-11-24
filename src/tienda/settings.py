@@ -25,7 +25,7 @@ env_hosts = [h for h in (h.strip() for h in env_allowed.split(',')) if h]
 
 ALLOWED_HOSTS = [
     _normalize_host(h) for h in (
-        env_hosts + ['localhost', '127.0.0.1'] + ([render_host] if render_host else [])
+        env_hosts + ['localhost', '127.0.0.1', 'testserver'] + ([render_host] if render_host else [])
     )
 ]
 

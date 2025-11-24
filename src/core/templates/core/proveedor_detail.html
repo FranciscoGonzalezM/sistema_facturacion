@@ -124,7 +124,7 @@
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5>Productos Relacionados ({{ productos.count }})</h5>
-            <a href="{% url 'producto_create' %}?proveedor={{ proveedor.id }}" class="btn btn-primary btn-sm">Agregar Producto</a>
+            <a href="{% url 'productos:producto_create' %}?proveedor={{ proveedor.id }}" class="btn btn-primary btn-sm">Agregar Producto</a>
         </div>
         <div class="card-body">
             {% if productos %}
@@ -157,8 +157,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="{% url 'producto_edit' producto.pk %}" class="btn btn-sm btn-info">Editar</a>
-                                    <a href="{% url 'producto_delete' producto.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                                     <a href="{% url 'productos:producto_edit' producto.pk %}" class="btn btn-sm btn-info">Editar</a>
+                                    <a href="{% url 'productos:producto_delete' producto.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -167,7 +167,7 @@
                 </div>
             {% else %}
                 <p class="text-muted">No hay productos relacionados con este proveedor</p>
-                <a href="{% url 'producto_create' %}?proveedor={{ proveedor.id }}" class="btn btn-primary">Agregar Primer Producto</a>
+                <a href="{% url 'productos:producto_create' %}?proveedor={{ proveedor.id }}" class="btn btn-primary">Agregar Primer Producto</a>
             {% endif %}
         </div>
     </div>
@@ -190,12 +190,12 @@
                                 <strong>${{ producto.precio }}</strong> | Stock: {{ producto.stock }}
                             </p>
                         </div>
-                        <div class="card-footer bg-transparent">
+                                <div class="card-footer bg-transparent">
                             <span class="badge bg-{% if producto.activo %}success{% else %}secondary{% endif %}">
                                 {{ producto.activo|yesno:"Activo,Inactivo" }}
                             </span>
                             <div class="float-end">
-                                <a href="{% url 'producto_edit' producto.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                                <a href="{% url 'productos:producto_edit' producto.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
                             </div>
                         </div>
                     </div>

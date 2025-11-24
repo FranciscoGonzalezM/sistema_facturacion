@@ -5,7 +5,7 @@
 
 {% block content %}
 <h2>{% if form.instance.id %}Editar{% else %}Nuevo{% endif %} Producto</h2>
-<a href="{% url 'producto_list' %}" class="btn btn-secondary mb-3">⬅ Volver al Listado</a>
+<a href="{% url 'productos:producto_list' %}" class="btn btn-secondary mb-3">⬅ Volver al Listado</a>
 
 <!-- Mensajes de confirmación -->
 {% if messages %}
@@ -99,9 +99,9 @@
         {% if form.moneda.errors %}
         <div class="text-danger">{{ form.moneda.errors }}</div>
         {% endif %}
-        <div class="form-text">
+                <div class="form-text">
             Selecciona la moneda para este producto.
-            <a href="{% url 'lista_monedas' %}" target="_blank" class="text-decoration-none">
+            <a href="{% url 'productos:lista_monedas' %}" target="_blank" class="text-decoration-none">
                 <i class="fas fa-coins"></i> Gestionar monedas
             </a>
         </div>

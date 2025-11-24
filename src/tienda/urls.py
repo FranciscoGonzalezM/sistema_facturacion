@@ -32,13 +32,13 @@ urlpatterns = [
     ), name='password_reset_complete'),
     
     # Apps
-    path('clientes/', include('clientes.urls')),
-    path('productos/', include('productos.urls')),
-    path('categorias/', include('categorias.urls')),
+    path('clientes/', include(('clientes.urls', 'clientes'), namespace='clientes')),
+    path('productos/', include(('productos.urls', 'productos'), namespace='productos')),
+    path('categorias/', include(('categorias.urls', 'categorias'), namespace='categorias')),
     path('facturas/', include(('facturas.urls','facturas'), namespace='facturas')),
     path('proveedores/', include(('proveedores.urls', 'proveedores'), namespace='proveedores')),
-    path('organizacion/', include('organizaciones.urls')),
-    path('requizas/', include('requiza.urls')),
+    path('organizacion/', include(('organizaciones.urls', 'organizaciones'), namespace='organizaciones')),
+    path('requizas/', include(('requiza.urls', 'requiza'), namespace='requiza')),
     
     
     path('dashboard/', include(('core.urls', 'core'), namespace='core')),   # ahora Django encuentra 'facturar'

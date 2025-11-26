@@ -260,7 +260,7 @@ def crear_moneda(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Moneda creada exitosamente.')
-            return redirect('lista_monedas')
+            return redirect('productos:lista_monedas')
     else:
         form = MonedaForm()
     
@@ -274,7 +274,7 @@ def editar_moneda(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Moneda actualizada exitosamente.')
-            return redirect('lista_monedas')
+            return redirect('productos:lista_monedas')
     else:
         form = MonedaForm(instance=moneda)
     
@@ -295,7 +295,7 @@ def configurar_tienda(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Configuración de tienda actualizada.')
-            return redirect('lista_monedas')
+            return redirect('productos:lista_monedas')
     else:
         form = ConfiguracionTiendaForm(instance=config)
     

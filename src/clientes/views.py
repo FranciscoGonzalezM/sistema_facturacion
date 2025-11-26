@@ -20,7 +20,7 @@ def cliente_create(request):
             if org is not None:
                 cliente.organizacion = org
             cliente.save()
-            return redirect('cliente_list')
+            return redirect('clientes:cliente_list')
     else:
         form = ClienteForm()
     return render(request, 'core/cliente_form.html', {'form': form})
@@ -32,7 +32,7 @@ def cliente_update(request, pk):
         form = ClienteForm(request.POST, instance=cliente)
         if form.is_valid():
             form.save()
-            return redirect('cliente_list')
+            return redirect('clientes:cliente_list')
     else:
         form = ClienteForm(instance=cliente)
     return render(request, 'core/cliente_form.html', {'form': form})
@@ -42,5 +42,5 @@ def cliente_delete(request, pk):
     cliente = get_object_or_404(Cliente.objects.filter(organizacion=org) if org is not None else Cliente.objects, pk=pk)
     if request.method == 'POST':
         cliente.delete()
-        return redirect('cliente_list')
+        return redirect('clientes:cliente_list')
     return render(request, 'core/cliente_confirm_delete.html', {'cliente': cliente})

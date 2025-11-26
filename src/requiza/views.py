@@ -31,7 +31,7 @@ def nueva_requiza(request):
                     producto.save()
                     requiza.save()
                     messages.success(request, "Requiza registrada con éxito.")
-                    return redirect('requiza_list')  # corregido el nombre
+                    return redirect('requiza:requiza_list')  # corregido el namespace
                 else:
                     form.add_error('cantidad', 'No hay suficiente stock disponible.')
     else:

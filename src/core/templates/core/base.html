@@ -101,12 +101,15 @@
                     <span class="tooltip-text">Artículos</span>
                 </a>
             </li>
+            {% has_org_role 'cajero' as is_cajero %}
             <li class="nav-item">
+                {% if not is_cajero %}
                 <a href="{% url 'productos:producto_list' %}" class="nav-link">
                     <i class="fas fa-layer-group"></i>
                     <span class="link-text">Productos (Combos)</span>
                     <span class="tooltip-text">Productos (Combos)</span>
                 </a>
+                {% endif %}
             </li>
             <li class="nav-item">
                 <a href="{% url 'categorias:categoria_list' %}" class="nav-link">

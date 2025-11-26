@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Moneda{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-coins me-2"></i>
+                        {% if form.instance.pk %}Editar{% else %}Nueva{% endif %} Moneda
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_codigo" class="form-label">Código (3 letras)</label>
+                            {{ form.codigo }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_nombre" class="form-label">Nombre</label>
+                            {{ form.nombre }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_simbolo" class="form-label">Símbolo</label>
+                            {{ form.simbolo }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="id_cambio_a_usd" class="form-label">Cambio a USD</label>
+                            {{ form.cambio_a_usd }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.principal }}
+                                <label class="form-check-label" for="id_principal">Moneda Principal</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Guardar
+                            </button>
+                            <a href="{% url 'articulos:lista_monedas' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

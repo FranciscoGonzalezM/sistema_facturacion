@@ -1,0 +1,179 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Artículos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-box-open me-2"></i>Artículos</h2>
+        <a href="{% url 'articulos:articulo_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Nuevo Artículo
+        </a>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_articulos }}</h3>
+                    <p class="mb-0">Total Artículos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ articulos_activos }}</h3>
+                    <p class="mb-0">Activos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ stock_bajo_count }}</h3>
+                    <p class="mb-0">Stock Bajo</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_monedas }}</h3>
+                    <p class="mb-0">Monedas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar..." value="{{ request.GET.search }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="categoria" class="form-select">
+                        <option value="">Categoría</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if request.GET.categoria == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="estado" class="form-select">
+                        <option value="">Estado</option>
+                        <option value="activo" {% if request.GET.estado == 'activo' %}selected{% endif %}>Activo</option>
+                        <option value="inactivo" {% if request.GET.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="stock" class="form-select">
+                        <option value="">Stock</option>
+                        <option value="bajo" {% if request.GET.stock == 'bajo' %}selected{% endif %}>Bajo (&lt;10)</option>
+                        <option value="medio" {% if request.GET.stock == 'medio' %}selected{% endif %}>Medio (10-50)</option>
+                        <option value="alto" {% if request.GET.stock == 'alto' %}selected{% endif %}>Alto (&gt;50)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-secondary me-2">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'articulos:articulo_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de artículos -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for articulo in articulos %}
+                        <tr>
+                            <td>{{ articulo.nombre }}</td>
+                            <td>{{ articulo.categoria.nombre }}</td>
+                            <td>{{ articulo.moneda.simbolo }}{{ articulo.precio }}</td>
+                            <td>
+                                {% if articulo.stock < 10 %}
+                                <span class="badge bg-danger">{{ articulo.stock }}</span>
+                                {% elif articulo.stock < 50 %}
+                                <span class="badge bg-warning text-dark">{{ articulo.stock }}</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ articulo.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if articulo.activo %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'articulos:articulo_edit' articulo.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'articulos:articulo_delete' articulo.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No hay artículos registrados
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if articulos.has_other_pages %}
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center">
+                    {% if articulos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ articulos.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in articulos.paginator.page_range %}
+                    <li class="page-item {% if articulos.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if articulos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ articulos.next_page_number }}">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -244,6 +244,24 @@ def productos_por_proveedor(request, proveedor_id):
     
     return render(request, 'core/productos_por_proveedor.html', context)
 
+
+def producto_detalle(request, pk):
+    """Detalle simple del producto"""
+    org = getattr(request, 'organizacion', None)
+    producto = get_object_or_404(Producto.objects.filter(organizacion=org) if org is not None else Producto.objects, pk=pk)
+    return render(request, 'core/producto_detalle.html', {'producto': producto})
+
+
+def calcular_precio(request, pk):
+    """API simple para devolver precio del producto (JSON)"""
+    producto = get_object_or_404(Producto, pk=pk)
+    data = {
+        'id': producto.id,
+        'precio': str(producto.precio),
+        'moneda': producto.moneda.simbolo if producto.moneda else '$'
+    }
+    return JsonResponse(data)
+
 @login_required
 def lista_monedas(request):
     monedas = Moneda.objects.all()

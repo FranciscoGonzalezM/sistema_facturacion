@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+
+{% block title %}Monedas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-coins me-2"></i>Monedas</h2>
+        <a href="{% url 'articulos:crear_moneda' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Nueva Moneda
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Símbolo</th>
+                            <th>Cambio a USD</th>
+                            <th>Principal</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for moneda in monedas %}
+                        <tr>
+                            <td>{{ moneda.codigo }}</td>
+                            <td>{{ moneda.nombre }}</td>
+                            <td>{{ moneda.simbolo }}</td>
+                            <td>{{ moneda.cambio_a_usd }}</td>
+                            <td>
+                                {% if moneda.principal %}
+                                <span class="badge bg-success">Sí</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'articulos:editar_moneda' moneda.pk %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No hay monedas registradas
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'articulos:configurar_tienda' %}" class="btn btn-secondary">
+            <i class="fas fa-cog me-1"></i>Configuración de Tienda
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+

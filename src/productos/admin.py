@@ -1,23 +1,18 @@
-# productos/admin.py
 from django.contrib import admin
-from .models import Producto, CodigoProducto
+from .models import Producto, ProductoItem
+
+
+class ProductoItemInline(admin.TabularInline):
+    model = ProductoItem
+    extra = 1
+    # Avoid autocomplete reference to Articulo if admin for that model is not registered
+    # autocomplete_fields = ['articulo']
+
 
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'categoria', 'precio', 'stock', 'activo', 'disponible']
-    list_filter = ['activo', 'categoria']
-    list_editable = ['activo', 'stock']  # Para editar fácilmente
+    list_display = ['nombre', 'precio', 'stock', 'activo', 'organizacion', 'moneda']
+    list_filter = ['activo', 'organizacion', 'moneda']
+    search_fields = ['nombre']
+    inlines = [ProductoItemInline]
     
-    # MOSTRAR TODOS LOS PRODUCTOS, NO SOLO LOS ACTIVOS
-    def get_queryset(self, request):
-        return Producto.all_objects.all()
-
-@admin.register(CodigoProducto)
-class CodigoProductoAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'codigo_barra', 'codigo_qr', 'get_categoria']
-    list_filter = ['producto__categoria']
-    search_fields = ['producto__nombre', 'codigo_barra', 'codigo_qr']
-    
-    def get_categoria(self, obj):
-        return obj.producto.categoria if obj.producto else 'N/A'
-    get_categoria.short_description = 'Categoría'
